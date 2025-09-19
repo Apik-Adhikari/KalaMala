@@ -3,16 +3,10 @@ import "./index.css";
 
 function App() {
   return (
-    <div className="App min-h-screen bg-gray-100">
+    <div className="">
+
       <Header />
-      <main className="p-4">
-        <h1 className="text-3xl font-bold text-gray-800">
-          Welcome to Kala Mala E-commerce
-        </h1>
-        <p className="mt-2 text-gray-600">
-          This is a sample homepage. Start adding your components here.
-        </p>
-      </main>
+
     </div>
   );
 }

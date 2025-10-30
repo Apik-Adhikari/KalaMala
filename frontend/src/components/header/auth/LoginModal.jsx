@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-export default function LoginModal({ onClose }) {
+export default function LoginModal({ onClose, onSwitch }) {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -79,7 +79,13 @@ export default function LoginModal({ onClose }) {
           <button
             type="button"
             className="text-blue-600 font-medium underline"
-            onClick={() => navigate('/register')}
+            onClick={() => {
+              if (onSwitch) {
+                onSwitch();
+              } else {
+                navigate('/register');
+              }
+            }}
           >
             Register
           </button>

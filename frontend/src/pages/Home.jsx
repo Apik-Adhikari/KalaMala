@@ -17,18 +17,25 @@ export default function Home() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-    fetch("/api/users/profile", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then((res) => res.json())
-      .then((data) => {
+    const fetchProfile = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      try {
+        const res = await fetch("http://localhost:5000/api/users/profile", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) {
+          // token invalid or expired
+          setUser(null);
+          return;
+        }
+        const data = await res.json();
         setUser(data);
-      })
-      .catch(() => setUser(null));
+      } catch (err) {
+        setUser(null);
+      }
+    };
+    fetchProfile();
   }, []);
 
   return (

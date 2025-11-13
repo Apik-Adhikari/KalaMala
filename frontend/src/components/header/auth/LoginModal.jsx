@@ -92,7 +92,10 @@ export default function LoginModal({ onClose, onSwitch }) {
         </p>
 
         <button
-          onClick={onClose}
+          onClick={() => {
+            if (onClose) onClose();
+            else navigate('/');
+          }}
           className="mt-4 w-full py-2 border rounded hover:bg-gray-100"
         >
           Close

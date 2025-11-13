@@ -1,13 +1,11 @@
 import { User } from "lucide-react";
 import React, { useState, useRef, useEffect } from "react";
-import LoginModal from "../header/auth/LoginModal.jsx";
-import RegisterModal from "../header/auth/RegisterModal.jsx";
+import { useNavigate } from "react-router-dom";
 
 export default function UserMenu() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [showLogin, setShowLogin] = useState(false);
-  const [showRegister, setShowRegister] = useState(false);
   const ref = useRef(null);
+  const navigate = useNavigate();
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -22,14 +20,12 @@ export default function UserMenu() {
 
   const openLogin = () => {
     setDropdownOpen(false);
-    setShowRegister(false);
-    setShowLogin(true);
+    navigate('/login');
   };
 
   const openRegister = () => {
     setDropdownOpen(false);
-    setShowLogin(false);
-    setShowRegister(true);
+    navigate('/register');
   };
 
   return (
@@ -60,26 +56,7 @@ export default function UserMenu() {
         </div>
       )}
 
-      {showLogin && (
-        <LoginModal
-          onClose={() => setShowLogin(false)}
-          onSwitch={() => {
-            setShowLogin(false);
-            setShowRegister(true);
-          }}
-        />
-      )}
-
-      {showRegister && (
-        <RegisterModal
-          onClose={() => setShowRegister(false)}
-          onSwitch={() => {
-            // allow switching between modals
-            setShowRegister(false);
-            setShowLogin(true);
-          }}
-        />
-      )}
+      {/* Navigation to /login and /register handled by route pages */}
     </div>
   );
 }

@@ -8,6 +8,8 @@ import Footer from "./components/footer/Footer.jsx";
 
 import ProductsPage from "./pages/ProductsPage.jsx";
 import ProductDetailsPage from "./pages/ProductDetailsPage.jsx";
+import CartPage from "./pages/CartPage.jsx";
+import About from "./pages/About.jsx";
 
 function App() {
   return (
@@ -19,6 +21,8 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/products" element={<ProductsPage />} />
             <Route path="/products/:id" element={<ProductDetailsPage />} />
+            <Route path="/cart" element={<CartPage />} />
+            <Route path="/about" element={<About />} />
             <Route path="/register" element={<RegisterModal />} />
             <Route path="/login" element={<LoginModal />} />
           </Routes>

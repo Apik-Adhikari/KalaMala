@@ -68,7 +68,7 @@ export default function RegisterModal({ onClose, onSwitch }) {
         }
         setTimeout(() => {
           setFlash("");
-          onClose();
+          if (onClose && typeof onClose === 'function') onClose();
           navigate("/");
         }, 800);
       } else {
@@ -162,23 +162,29 @@ export default function RegisterModal({ onClose, onSwitch }) {
             Sign up with Google
           </button>
 
-          <p className="mt-4 text-sm text-center">
-            Already have an account?{" "}
-            <button
-              type="button"
-              className="text-blue-600 font-medium underline"
-              onClick={onSwitch}
-            >
-              Login
-            </button>
-          </p>
+            <p className="mt-4 text-sm text-center">
+              Already have an account?{" "}
+              <button
+                type="button"
+                className="text-blue-600 font-medium underline"
+                onClick={() => {
+                  if (onSwitch) onSwitch();
+                  else navigate('/login');
+                }}
+              >
+                Login
+              </button>
+            </p>
 
-          <button
-            onClick={onClose}
-            className="mt-4 w-full py-2 border rounded hover:bg-gray-100"
-          >
-            Close
-          </button>
+            <button
+              onClick={() => {
+                if (onClose) onClose();
+                else navigate('/');
+              }}
+              className="mt-4 w-full py-2 border rounded hover:bg-gray-100"
+            >
+              Close
+            </button>
         </div>
       </div>
     </>

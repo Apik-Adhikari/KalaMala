@@ -19,15 +19,43 @@ export default function ProductList() {
             <img src={product.image} alt={product.name} className="w-32 h-32 object-cover mb-4 rounded" />
             <h3 className="text-lg font-semibold mb-2">{product.name}</h3>
             <p className="text-blue-600 font-bold mb-2">${product.price}</p>
-            <button
-              className="bg-blue-300 text-white px-4 py-2 rounded hover:bg-blue-400 transition"
-              onClick={() => navigate(`/products/${product.id}`)}
-            >
-              View Details
-            </button>
+            <div className="flex gap-2 mt-3">
+              <button
+                className="bg-blue-300 text-white px-4 py-2 rounded hover:bg-blue-400 transition"
+                onClick={() => navigate(`/products/${product.id}`)}
+              >
+                View Details
+              </button>
+              <button
+                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition"
+                onClick={() => addToCart(product)}
+              >
+                Add to Cart
+              </button>
+            </div>
           </div>
         ))}
       </div>
     </section>
   );
+}
+
+function addToCart(productToAdd) {
+  try {
+    const raw = localStorage.getItem("cart");
+    const cart = raw ? JSON.parse(raw) : [];
+    const exists = cart.find((c) => c.id === productToAdd.id);
+    let next;
+    if (exists) {
+      next = cart.map((c) => (c.id === productToAdd.id ? { ...c, qty: (c.qty || 1) + 1 } : c));
+    } else {
+      next = [...cart, { ...productToAdd, qty: 1 }];
+    }
+    localStorage.setItem("cart", JSON.stringify(next));
+    window.dispatchEvent(new CustomEvent('cart-updated'));
+    // navigate to /cart
+    window.location.href = '/cart';
+  } catch (e) {
+    console.error('Failed to add to cart', e);
+  }
 }

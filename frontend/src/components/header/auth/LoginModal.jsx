@@ -1,8 +1,10 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "../../../context/LanguageContext";
 
 export default function LoginModal({ onClose, onSwitch }) {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -38,47 +40,57 @@ export default function LoginModal({ onClose, onSwitch }) {
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-      <div className="bg-white p-6 rounded-2xl shadow-lg w-96">
-        <h2 className="text-xl font-bold mb-4 text-center">Login</h2>
+    <div className="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-50">
+      <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-brand-gray/20">
+        <h2 className="text-3xl font-serif font-bold mb-6 text-center text-brand-dark">{t('auth_login_title')}</h2>
 
-        <form className="flex flex-col gap-3" onSubmit={handleSubmit}>
-          <input
-            type="email"
-            placeholder="Email"
-            className="border p-2 rounded"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            className="border p-2 rounded"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-          {error && <div className="text-red-600 text-sm">{error}</div>}
+        <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+          <div>
+            <input
+              type="email"
+              placeholder={t('auth_email')}
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-magenta/20 focus:border-brand-magenta transition-all"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <input
+              type="password"
+              placeholder={t('auth_password')}
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-magenta/20 focus:border-brand-magenta transition-all"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+
+          {error && <div className="text-red-500 text-sm font-medium bg-red-50 p-2 rounded-lg text-center">{error}</div>}
+
           <div className="flex justify-end">
             <button
               type="button"
-              className="text-xs text-blue-600 hover:underline mb-2"
+              className="text-sm text-brand-magenta hover:text-pink-700 font-medium transition-colors"
               onClick={() => alert('Forgot password clicked!')}
             >
-              Forgot password?
+              {t('auth_forgot')}
             </button>
           </div>
-          <button className="bg-blue-600 text-white py-2 rounded hover:bg-blue-700" disabled={loading}>
-            {loading ? 'Logging in...' : 'Login'}
+
+          <button
+            className="bg-brand-magenta text-white py-3 rounded-xl font-bold hover:bg-pink-700 transition-all duration-300 shadow-lg shadow-brand-magenta/20 hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed"
+            disabled={loading}
+          >
+            {loading ? t('auth_logging_in') : t('auth_login_btn')}
           </button>
         </form>
 
-        <p className="mt-4 text-sm text-center">
-          Don’t have an account?{' '}
+        <p className="mt-8 text-sm text-center text-gray-500">
+          {t('auth_no_account')}{' '}
           <button
             type="button"
-            className="text-blue-600 font-medium underline"
+            className="text-brand-magenta font-bold hover:underline transition-all"
             onClick={() => {
               if (onSwitch) {
                 onSwitch();
@@ -87,7 +99,7 @@ export default function LoginModal({ onClose, onSwitch }) {
               }
             }}
           >
-            Register
+            {t('auth_register_btn')}
           </button>
         </p>
 
@@ -96,9 +108,9 @@ export default function LoginModal({ onClose, onSwitch }) {
             if (onClose) onClose();
             else navigate('/');
           }}
-          className="mt-4 w-full py-2 border rounded hover:bg-gray-100"
+          className="mt-6 w-full py-2.5 text-gray-400 hover:text-brand-dark font-medium transition-colors text-sm"
         >
-          Close
+          {t('auth_close')}
         </button>
       </div>
     </div>

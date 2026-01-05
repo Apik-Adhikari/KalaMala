@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "../../../context/LanguageContext";
 
 // Simple flash message component
 function FlashMessage({ message, onClose }) {
@@ -14,6 +15,7 @@ function FlashMessage({ message, onClose }) {
 
 export default function RegisterModal({ onClose, onSwitch }) {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -89,102 +91,102 @@ export default function RegisterModal({ onClose, onSwitch }) {
   return (
     <>
       <FlashMessage message={flash} onClose={() => setFlash("")} />
-      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-        <div className="bg-white p-6 rounded-2xl shadow-lg w-96">
-          <h2 className="text-xl font-bold mb-4 text-center">Register</h2>
+      <div className="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-50">
+        <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-brand-gray/20 max-h-[90vh] overflow-y-auto">
+          <h2 className="text-3xl font-serif font-bold mb-6 text-center text-brand-dark">{t('auth_register_title')}</h2>
 
-          <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <input
               type="text"
               name="username"
-              placeholder="Username"
+              placeholder={t('auth_username')}
               value={formData.username}
               onChange={handleChange}
               required
-              className="border p-2 rounded"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-magenta/20 focus:border-brand-magenta transition-all"
             />
 
             <input
               type="email"
               name="email"
-              placeholder="Email"
+              placeholder={t('auth_email')}
               value={formData.email}
               onChange={handleChange}
               required
-              className="border p-2 rounded"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-magenta/20 focus:border-brand-magenta transition-all"
             />
 
             <input
               type="tel"
               name="phone"
-              placeholder="+97798XXXXXXXX"
+              placeholder={t('auth_phone')}
               value={formData.phone}
               onChange={handleChange}
               required
-              className="border p-2 rounded"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-magenta/20 focus:border-brand-magenta transition-all"
             />
 
             <input
               type="password"
               name="password"
-              placeholder="Password"
+              placeholder={t('auth_password')}
               value={formData.password}
               onChange={handleChange}
               required
-              className="border p-2 rounded"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-magenta/20 focus:border-brand-magenta transition-all"
             />
 
             <input
               type="password"
               name="confirmPassword"
-              placeholder="Confirm Password"
+              placeholder={t('auth_confirm_password')}
               value={formData.confirmPassword}
               onChange={handleChange}
               required
-              className="border p-2 rounded"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-magenta/20 focus:border-brand-magenta transition-all"
             />
 
             <button
               type="submit"
-              className="bg-green-600 text-white py-2 rounded hover:bg-green-700"
+              className="bg-brand-magenta text-white py-3 rounded-xl font-bold hover:bg-pink-700 transition-all duration-300 shadow-lg shadow-brand-magenta/20 hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed mt-2"
               disabled={loading}
             >
-              {loading ? 'Registering...' : 'Register'}
+              {loading ? t('auth_registering') : t('auth_register_btn')}
             </button>
           </form>
 
           {/* Google Signup */}
           <button
             onClick={handleGoogleSignup}
-            className="mt-3 w-full py-2 border rounded hover:bg-gray-100 flex items-center justify-center gap-2"
+            className="mt-4 w-full py-3 border border-gray-300 rounded-xl hover:bg-gray-50 flex items-center justify-center gap-3 transition-colors font-medium text-brand-dark"
           >
             <img src="/google-logo.svg" alt="Google logo" className="w-5 h-5" />
-            Sign up with Google
+            {t('auth_google')}
           </button>
 
-            <p className="mt-4 text-sm text-center">
-              Already have an account?{" "}
-              <button
-                type="button"
-                className="text-blue-600 font-medium underline"
-                onClick={() => {
-                  if (onSwitch) onSwitch();
-                  else navigate('/login');
-                }}
-              >
-                Login
-              </button>
-            </p>
-
+          <p className="mt-8 text-sm text-center text-gray-500">
+            {t('auth_have_account')}{" "}
             <button
+              type="button"
+              className="text-brand-magenta font-bold hover:underline transition-all"
               onClick={() => {
-                if (onClose) onClose();
-                else navigate('/');
+                if (onSwitch) onSwitch();
+                else navigate('/login');
               }}
-              className="mt-4 w-full py-2 border rounded hover:bg-gray-100"
             >
-              Close
+              {t('auth_login_btn')}
             </button>
+          </p>
+
+          <button
+            onClick={() => {
+              if (onClose) onClose();
+              else navigate('/');
+            }}
+            className="mt-6 w-full py-2.5 text-gray-400 hover:text-brand-dark font-medium transition-colors text-sm"
+          >
+            {t('auth_close')}
+          </button>
         </div>
       </div>
     </>

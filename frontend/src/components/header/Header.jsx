@@ -3,12 +3,27 @@ import NavMenu from "./NavMenu.jsx";
 import SearchBar from "./SearchBar.jsx";
 import UserMenu from "./UserMenu.jsx";
 import CartIcon from "./CartIcon.jsx";
-import React, { useEffect, useState } from "react";
+import CartBoard from "./CartBoard.jsx";
+import LanguageSwitcher from "./LanguageSwitcher.jsx";
+import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function Header() {
   const [count, setCount] = useState(0);
+  const [cartOpen, setCartOpen] = useState(false);
+  const cartRef = useRef(null);
   const navigate = useNavigate();
+
+  // Close cart when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (cartRef.current && !cartRef.current.contains(event.target)) {
+        setCartOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     // initialize cart count from localStorage
@@ -55,13 +70,15 @@ export default function Header() {
   }, []);
 
   return (
-    <header className="bg-blue-300 w-full">
+    <header className="bg-white/90 backdrop-blur-md w-full border-b border-brand-gray sticky top-0 z-50 shadow-sm transition-all duration-300">
       <div className="max-w-7xl mx-auto flex justify-between items-center px-8 py-4">
         <Logo />
         <SearchBar />
         <NavMenu />
-        <div className="flex items-center gap-4 relative">
-          <CartIcon count={count} onClick={() => navigate("/cart")} />
+        <div className="flex items-center gap-4 relative" ref={cartRef}>
+          <LanguageSwitcher />
+          <CartIcon count={count} onClick={() => setCartOpen(!cartOpen)} />
+          {cartOpen && <CartBoard onClose={() => setCartOpen(false)} />}
           <UserMenu />
         </div>
       </div>

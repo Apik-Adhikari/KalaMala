@@ -1,29 +1,35 @@
 import React from "react";
+import { useLanguage } from "../context/LanguageContext";
 
 export default function About() {
+  const { t } = useLanguage();
+
   return (
-    <div className="max-w-4xl mx-auto p-8">
-      <h1 className="text-3xl font-bold mb-4">About KALAMALA</h1>
-      <p className="mb-4 text-gray-700">
-        KALAMALA is a curated marketplace celebrating handmade craftsmanship and small-batch artistry.
-        We bring together independent makers from across regions to showcase thoughtfully created products —
-        from jewelry and textiles to ceramics and home goods. Our goal is to make it easy for shoppers to
-        discover meaningful, well-crafted items while supporting the talented people who make them.
-      </p>
+    <div className="max-w-4xl mx-auto px-8 py-16">
+      <div className="text-center mb-16">
+        <h1 className="text-5xl font-serif font-bold text-brand-dark mb-6">{t('about_title')}</h1>
+        <div className="h-1 w-24 bg-brand-magenta mx-auto rounded-full"></div>
+      </div>
 
-      <p className="mb-4 text-gray-700">
-        We believe in stories behind every object. Each product on KALAMALA is selected for its quality,
-        sustainability, and the care with which it was created. We prioritize transparent sourcing, fair
-        pricing for makers, and timeless designs that can be cherished for years.
-      </p>
+      <div className="space-y-8 text-lg text-gray-600 leading-relaxed font-light">
+        <p>
+          <strong className="text-brand-dark font-medium">KalaMala</strong> {t('about_p1')}
+        </p>
 
-      <p className="mb-4 text-gray-700">
-        Whether you're shopping for a thoughtful gift or something unique for your home, KALAMALA aims to
-        connect you with makers and their stories. If you're a maker and would like to join our community,
-        reach out — we'd love to hear about your craft.
-      </p>
+        <p>
+          {t('about_p2')}
+        </p>
 
-      <p className="text-sm text-gray-500">Thank you for supporting small makers and choosing thoughtful goods.</p>
+        <div className="bg-brand-gray/30 p-8 rounded-2xl md:-mx-8 border border-brand-gray/50 my-12">
+          <p className="italic text-xl text-brand-dark font-serif text-center">
+            "{t('about_quote')}"
+          </p>
+        </div>
+
+        <p className="text-sm text-gray-500 pt-8 border-t border-brand-gray/30">
+          {t('about_footer')}
+        </p>
+      </div>
     </div>
   );
 }

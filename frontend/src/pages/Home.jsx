@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import ProductList from "../components/views/ProductList.jsx";
 import ProductDetails from "../components/views/ProductDetails.jsx";
+import Hero from "../components/views/Hero.jsx";
 
 export default function Home() {
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -39,10 +40,9 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="py-10">
-      <div className="text-center mb-10 text-2xl font-bold">
-        Welcome! This is {user?.name ? user.name : ""} homepage.
-      </div>
+    <div className="pb-10">
+      {!selectedProduct && <Hero user={user} />}
+
       {!selectedProduct ? (
         <ProductList onViewDetails={handleViewDetails} />
       ) : (

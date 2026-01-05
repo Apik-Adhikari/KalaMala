@@ -1,5 +1,58 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap');
 @import "tailwindcss";
+
+@theme {
+    --color-brand-magenta: #be185d;
+    --color-brand-yellow: #f59e0b;
+    --color-brand-dark: #1a1a1a;
+    --color-brand-light: #fafafa;
+    --color-brand-gray: #f3f4f6;
+
+    --font-sans: "Outfit", sans-serif;
+    --font-serif: "Playfair Display", serif;
+}
+
+/* Custom Utilities if needed, or layer base */
+@layer base {
+    body {
+        background-color: var(--color-brand-light);
+        color: var(--color-brand-dark);
+        font-family: var(--font-sans);
+        -webkit-font-smoothing: antialiased;
+    }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--color-brand-magenta);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #96004a;
+    /* darker magenta */
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animation-fade-in {
+    animation: fade-in 0.3s ease-out forwards;
+}

@@ -1,7 +1,5 @@
-[dotenv@17.2.2] injecting env (1) from .env -- tip: 📡 auto-backup env with Radar: https://dotenvx.com/radar
+[dotenv@17.2.2] injecting env (1) from .env -- tip: ⚙️  write to custom object with { processEnv: myObject }
 Server running on port 5000
-(node:5684) DeprecationWarning: collection.ensureIndex is deprecated. Use createIndexes instead.
+(node:9703) DeprecationWarning: collection.ensureIndex is deprecated. Use createIndexes instead.
 (Use `node --trace-deprecation ...` to show where the warning was created)
 MongoDB Connected: localhost
-Warning: JWT_SECRET is not set in environment. Tokens will still be generated but should be configured for production.
-Warning: JWT_SECRET is not set in environment. Tokens will still be generated but should be configured for production.

@@ -33,8 +33,8 @@ export default function ProductDetails({ product }) {
           <h2 className="text-2xl font-bold mb-2">{product.name}</h2>
           <p className="text-blue-600 font-bold text-xl mb-2">${product.price}</p>
           <p className="mb-4 text-gray-700">{product.description}</p>
-          <p className="mb-2 text-sm text-gray-500">Category: {product.category}</p>
-          <p className="mb-4 text-sm text-gray-500">In Stock: {product.stock}</p>
+          <p className="mb-2 text-sm text-gray-500">Category: {product.category || product.category}</p>
+          <p className="mb-4 text-sm text-gray-500">In Stock: {product.stock ?? product.countInStock ?? 'N/A'}</p>
           <button
             onClick={() => addToCart(product)}
             className="bg-blue-300 text-white px-6 py-2 rounded hover:bg-blue-400 transition"

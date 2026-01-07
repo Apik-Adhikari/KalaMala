@@ -66,7 +66,7 @@ export default function CartPage() {
               <div className="flex-1">
                 <div className="flex justify-between mb-2">
                   <h3 className="font-bold text-lg text-brand-dark">{it.name}</h3>
-                  <div className="font-bold text-xl text-brand-magenta">${((it.price || 0) * (it.qty || 1)).toFixed(2)}</div>
+                  <div className="font-bold text-xl text-brand-magenta">Rs. {((it.price || 0) * (it.qty || 1)).toFixed(2)}</div>
                 </div>
 
                 <div className="flex justify-between items-center">
@@ -100,7 +100,7 @@ export default function CartPage() {
         <div className="bg-brand-gray/10 p-8">
           <div className="flex justify-between items-center mb-8">
             <span className="text-xl font-medium text-gray-600">{t('cart_total')}</span>
-            <span className="text-3xl font-bold text-brand-dark">${totalPrice.toFixed(2)}</span>
+            <span className="text-3xl font-bold text-brand-dark">Rs. {totalPrice.toFixed(2)}</span>
           </div>
           <div className="flex gap-4 justify-end">
             <button

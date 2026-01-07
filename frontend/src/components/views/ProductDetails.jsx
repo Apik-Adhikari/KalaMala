@@ -44,7 +44,7 @@ export default function ProductDetails({ product }) {
             <p className="text-sm text-gray-400 uppercase tracking-wider font-semibold">{product.category || product.category}</p>
           </div>
 
-          <p className="text-brand-magenta font-bold text-3xl mb-6">${product.price}</p>
+          <p className="text-brand-magenta font-bold text-3xl mb-6">Rs. {product.price}</p>
 
           <p className="mb-6 text-gray-600 leading-relaxed">{product.description}</p>
 

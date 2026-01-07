@@ -3,8 +3,11 @@ const Product = require('../models/Product');
 // GET /api/products?featured=true
 exports.getProducts = async (req, res) => {
   try {
-    const { featured } = req.query;
-    const filter = featured === 'true' ? { featured: true } : {};
+    const { featured, category } = req.query;
+    const filter = {};
+    if (featured === 'true') filter.featured = true;
+    if (category) filter.category = category;
+
     const products = await Product.find(filter).sort({ createdAt: -1 });
     res.json(products);
   } catch (err) {

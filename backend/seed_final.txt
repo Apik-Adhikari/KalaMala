@@ -1,0 +1,59 @@
+﻿[dotenv@17.2.2] injecting env (0) from .env -- tip: ΓÜÖ∩╕Å  override existing env vars with { override: true }
+Starting seed process...
+MONGO_URI: mongodb://127.0.0.1:27017/KalaMala
+node : MongoDB connection error:
+At line:1 char:1
++ node seedProducts.js 2>&1 | Out-File 
+-FilePath seed_final.txt -Encodi ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecifi 
+   ed: (MongoDB connection error::Strin  
+  g) [], RemoteException
+    + FullyQualifiedErrorId : NativeComm 
+   andError
+ 
+MongooseServerSelectionError: connect 
+ECONNREFUSED 127.0.0.1:27017
+    at Connection.openUri (D:\CODES\6th 
+Semester\Project II\KalaMala\backend\node
+_modules\mongoose\lib\connection.js:847:3
+2)
+    at D:\CODES\6th Semester\Project II\K
+alaMala\backend\node_modules\mongoose\lib
+\index.js:351:10
+    at D:\CODES\6th Semester\Project II\K
+alaMala\backend\node_modules\mongoose\lib
+\helpers\promiseOrCallback.js:32:5
+    at new Promise (<anonymous>)
+    at promiseOrCallback (D:\CODES\6th 
+Semester\Project II\KalaMala\backend\node
+_modules\mongoose\lib\helpers\promiseOrCa
+llback.js:31:10)
+    at Mongoose._promiseOrCallback 
+(D:\CODES\6th Semester\Project II\KalaMal
+a\backend\node_modules\mongoose\lib\index
+.js:1149:10)
+    at Mongoose.connect (D:\CODES\6th 
+Semester\Project II\KalaMala\backend\node
+_modules\mongoose\lib\index.js:350:20)
+    at connectDB (D:\CODES\6th 
+Semester\Project 
+II\KalaMala\backend\config\db.js:5:31)
+    at seed (D:\CODES\6th 
+Semester\Project II\KalaMala\backend\seed
+Products.js:72:11)
+    at Object.<anonymous> (D:\CODES\6th 
+Semester\Project II\KalaMala\backend\seed
+Products.js:137:1)
+    at Module._compile (node:internal/mod
+ules/cjs/loader:1688:14)
+    at Object..js (node:internal/modules/
+cjs/loader:1820:10)
+    at Module.load (node:internal/modules
+/cjs/loader:1423:32)
+    at Function._load (node:internal/modu
+les/cjs/loader:1246:12)
+    at TracingChannel.traceSync 
+(node:diagnostics_channel:322:14)
+    at wrapModuleLoad 
+(node:internal/modules/cjs/loader:235:24)

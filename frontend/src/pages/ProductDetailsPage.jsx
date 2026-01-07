@@ -1,6 +1,7 @@
 import ProductDetails from "../components/views/ProductDetails.jsx";
 import { useParams } from "react-router-dom";
 import React, { useEffect, useState } from "react";
+import { staticProducts } from "../data/products";
 
 export default function ProductDetailsPage() {
   const { id } = useParams();
@@ -8,22 +9,16 @@ export default function ProductDetailsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let mounted = true;
-    const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-    async function load() {
-      try {
-        const res = await fetch(`${API_BASE}/api/products/${id}`);
-        if (!res.ok) throw new Error('Product not found');
-        const data = await res.json();
-        if (mounted) setProduct(data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    }
-    load();
-    return () => { mounted = false; };
+    setLoading(true);
+    // Simulate slight delay
+    const timer = setTimeout(() => {
+      // Check both id and _id since static data has both for compatibility
+      const found = staticProducts.find(p => p.id === id || p._id === id);
+      setProduct(found);
+      setLoading(false);
+    }, 200);
+
+    return () => clearTimeout(timer);
   }, [id]);
 
   if (loading) return (

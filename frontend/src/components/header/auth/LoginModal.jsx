@@ -25,7 +25,7 @@ export default function LoginModal({ onClose, onSwitch }) {
         // save token and user
         if (data.token) {
           localStorage.setItem('token', data.token);
-          localStorage.setItem('user', JSON.stringify({ _id: data._id, name: data.username, email: data.email }));
+          localStorage.setItem('user', JSON.stringify({ _id: data._id, name: data.username, email: data.email, role: data.role }));
         }
         onClose && onClose();
         navigate('/');

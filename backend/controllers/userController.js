@@ -1,4 +1,5 @@
 const User = require('../models/User');
+
 const generateToken = require('../utils/generateToken');
 
 // @desc    Register a new user
@@ -7,10 +8,10 @@ const generateToken = require('../utils/generateToken');
 exports.registerUser = async (req, res) => {
 	try {
 
-			let { username, email, phone, password } = req.body;
-			if (typeof phone === 'string') {
-				phone = phone.trim();
-			}
+		let { username, email, phone, password } = req.body;
+		if (typeof phone === 'string') {
+			phone = phone.trim();
+		}
 
 		// Check if user exists
 		const userExists = await User.findOne({ email });
@@ -34,6 +35,7 @@ exports.registerUser = async (req, res) => {
 			username: user.username,
 			email: user.email,
 			phone: user.phone,
+			role: user.role,
 			token,
 			message: 'Registration successful'
 		});
@@ -56,6 +58,7 @@ exports.loginUser = async (req, res) => {
 				username: user.username,
 				email: user.email,
 				phone: user.phone,
+				role: user.role,
 				token,
 			});
 		} else {
@@ -111,3 +114,5 @@ exports.updateUserProfile = async (req, res) => {
 		res.status(500).json({ message: error.message });
 	}
 };
+
+

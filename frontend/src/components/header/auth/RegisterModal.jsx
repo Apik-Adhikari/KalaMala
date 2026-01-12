@@ -66,7 +66,7 @@ export default function RegisterModal({ onClose, onSwitch }) {
         // Save token and user info to localStorage so the user is treated as logged in
         if (data.token) {
           localStorage.setItem('token', data.token);
-          localStorage.setItem('user', JSON.stringify({ _id: data._id, name: data.username, email: data.email }));
+          localStorage.setItem('user', JSON.stringify({ _id: data._id, name: data.username, email: data.email, role: data.role }));
         }
         setTimeout(() => {
           setFlash("");

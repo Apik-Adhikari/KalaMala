@@ -1,12 +1,13 @@
 const Product = require('../models/Product');
 
-// GET /api/products?featured=true
+// GET /api/products?featured=true&seller=id
 exports.getProducts = async (req, res) => {
   try {
-    const { featured, category } = req.query;
+    const { featured, category, seller } = req.query;
     const filter = {};
     if (featured === 'true') filter.featured = true;
     if (category) filter.category = category;
+    if (seller) filter.user = seller;
 
     const products = await Product.find(filter).sort({ createdAt: -1 });
     res.json(products);
@@ -26,11 +27,27 @@ exports.getProductById = async (req, res) => {
   }
 };
 
-// POST /api/products - create a product (simple admin route)
+// POST /api/products - create a product
 exports.createProduct = async (req, res) => {
   try {
     const { name, price = 0, description = '', image = '', category = '', countInStock = 0, featured = false } = req.body;
-    const product = new Product({ name, price, description, image, category, countInStock, featured });
+
+    // Ensure user is attached (from auth middleware)
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+
+    const product = new Product({
+      user: req.user._id,
+      name,
+      price,
+      description,
+      image,
+      category,
+      countInStock,
+      featured
+    });
+
     const saved = await product.save();
     res.status(201).json(saved);
   } catch (err) {

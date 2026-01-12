@@ -10,6 +10,10 @@ import ProductsPage from "./pages/ProductsPage.jsx";
 import ProductDetailsPage from "./pages/ProductDetailsPage.jsx";
 import CartPage from "./pages/CartPage.jsx";
 import About from "./pages/About.jsx";
+import BecomeSeller from "./components/header/auth/BecomeSeller.jsx";
+import AddProduct from "./pages/AddProduct.jsx";
+import SellerDashboard from "./pages/SellerDashboard.jsx";
+import EditProduct from "./pages/EditProduct.jsx";
 
 import { LanguageProvider } from "./context/LanguageContext.jsx";
 
@@ -28,6 +32,10 @@ function App() {
               <Route path="/about" element={<About />} />
               <Route path="/register" element={<RegisterModal />} />
               <Route path="/login" element={<LoginModal />} />
+              <Route path="/become-seller" element={<BecomeSeller />} />
+              <Route path="/add-product" element={<AddProduct />} />
+              <Route path="/seller-dashboard" element={<SellerDashboard />} />
+              <Route path="/edit-product/:id" element={<EditProduct />} />
             </Routes>
           </main>
           <Footer />

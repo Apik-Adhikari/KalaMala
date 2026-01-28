@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../context/AuthContext';
 
 export default function BecomeSeller() {
     const navigate = useNavigate();
+    const { token, updateUser } = useAuth();
     const [loading, setLoading] = useState(false);
     const [shopName, setShopName] = useState('');
     const [shopLocation, setShopLocation] = useState('');
@@ -15,7 +17,6 @@ export default function BecomeSeller() {
         setError('');
 
         try {
-            const token = localStorage.getItem('token');
             if (!token) {
                 navigate('/login');
                 return;
@@ -38,8 +39,8 @@ export default function BecomeSeller() {
 
             const data = await res.json();
             if (res.ok) {
-                // Update local storage with new role and shop name
-                localStorage.setItem('user', JSON.stringify({
+                // Update context with new user data
+                updateUser({
                     _id: data._id,
                     name: data.username,
                     email: data.email,
@@ -47,16 +48,11 @@ export default function BecomeSeller() {
                     shopName: data.shopName,
                     shopLocation: data.shopLocation,
                     shopPhone: data.shopPhone
-                }));
-                // Update token if it was refreshed
-                if (data.token) {
-                    localStorage.setItem('token', data.token);
-                }
+                }, data.token);
 
                 // Show success message
                 alert('Seller added successfully!');
                 navigate('/');
-                window.location.reload();
             } else {
                 setError(data.message || 'Failed to update role');
             }

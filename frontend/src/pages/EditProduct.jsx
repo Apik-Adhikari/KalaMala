@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { PRODUCT_CATEGORIES } from '../constants/categories';
 
 export default function EditProduct() {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { token } = useAuth();
     const [loading, setLoading] = useState(false);
     const [fetchLoading, setFetchLoading] = useState(true);
     const [error, setError] = useState('');
@@ -52,7 +55,6 @@ export default function EditProduct() {
         setError('');
 
         try {
-            const token = localStorage.getItem('token');
             if (!token) {
                 navigate('/login');
                 return;
@@ -139,13 +141,16 @@ export default function EditProduct() {
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                            <input
-                                type="text"
+                            <select
                                 name="category"
                                 value={formData.category}
                                 onChange={handleChange}
-                                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-magenta/20 focus:border-brand-magenta outline-none transition-all"
-                            />
+                                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-magenta/20 focus:border-brand-magenta outline-none transition-all bg-white"
+                            >
+                                {PRODUCT_CATEGORIES.map(cat => (
+                                    <option key={cat} value={cat}>{cat}</option>
+                                ))}
+                            </select>
                         </div>
 
                         <div>

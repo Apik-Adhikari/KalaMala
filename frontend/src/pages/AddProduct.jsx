@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { PRODUCT_CATEGORIES } from '../constants/categories';
 
 export default function AddProduct() {
     const navigate = useNavigate();
+    const { token } = useAuth();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [formData, setFormData] = useState({
@@ -10,8 +13,9 @@ export default function AddProduct() {
         price: '',
         description: '',
         image: '',
-        category: '',
-        countInStock: ''
+        category: PRODUCT_CATEGORIES[0], // Set default category
+        countInStock: '',
+        featured: true
     });
 
     const handleChange = (e) => {
@@ -24,7 +28,6 @@ export default function AddProduct() {
         setError('');
 
         try {
-            const token = localStorage.getItem('token');
             if (!token) {
                 navigate('/login');
                 return;
@@ -46,7 +49,8 @@ export default function AddProduct() {
                 setError(data.message || 'Failed to add product');
             }
         } catch (err) {
-            setError('An error occurred');
+            console.error('Add product error:', err);
+            setError(err.message || 'An error occurred');
         } finally {
             setLoading(false);
         }
@@ -112,14 +116,16 @@ export default function AddProduct() {
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                            <input
-                                type="text"
+                            <select
                                 name="category"
                                 value={formData.category}
                                 onChange={handleChange}
-                                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-magenta/20 focus:border-brand-magenta outline-none transition-all"
-                                placeholder="e.g. Clothing, Art, Decor"
-                            />
+                                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-magenta/20 focus:border-brand-magenta outline-none transition-all bg-white"
+                            >
+                                {PRODUCT_CATEGORIES.map(cat => (
+                                    <option key={cat} value={cat}>{cat}</option>
+                                ))}
+                            </select>
                         </div>
 
                         <div>

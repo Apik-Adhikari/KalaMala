@@ -1,30 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Edit, Trash, Package } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 export default function SellerDashboard() {
     const navigate = useNavigate();
+    const { user, token } = useAuth();
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const [user, setUser] = useState(null);
 
     useEffect(() => {
-        const userRaw = localStorage.getItem('user');
-        if (!userRaw) {
+        if (!user) {
             navigate('/login');
             return;
         }
-        const userData = JSON.parse(userRaw);
-        setUser(userData);
 
-        if (userData.role !== 'seller') {
+        if (user.role !== 'seller') {
             navigate('/become-seller');
             return;
         }
 
-        fetchMyProducts(userData._id);
-    }, [navigate]);
+        fetchMyProducts(user._id);
+    }, [user, navigate]);
 
     const fetchMyProducts = async (userId) => {
         try {
@@ -46,7 +44,6 @@ export default function SellerDashboard() {
         if (!window.confirm('Are you sure you want to delete this product?')) return;
 
         try {
-            const token = localStorage.getItem('token');
             const res = await fetch(`http://localhost:5000/api/products/${id}`, {
                 method: 'DELETE',
                 headers: {

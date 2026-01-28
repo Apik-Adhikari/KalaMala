@@ -5,10 +5,12 @@ import UserMenu from "./UserMenu.jsx";
 import CartIcon from "./CartIcon.jsx";
 import CartBoard from "./CartBoard.jsx";
 import LanguageSwitcher from "./LanguageSwitcher.jsx";
+import { useAuth } from "../../context/AuthContext";
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function Header() {
+  const { user } = useAuth();
   const [count, setCount] = useState(0);
   const [cartOpen, setCartOpen] = useState(false);
   const cartRef = useRef(null);
@@ -78,9 +80,6 @@ export default function Header() {
         <div className="flex items-center gap-4 relative" ref={cartRef}>
           <button
             onClick={() => {
-              const userRaw = localStorage.getItem('user');
-              const user = userRaw ? JSON.parse(userRaw) : null;
-
               if (user && user.role === 'seller') {
                 navigate('/seller-dashboard');
               } else {
@@ -89,12 +88,7 @@ export default function Header() {
             }}
             className="hidden md:block px-4 py-2 rounded-full border border-brand-magenta text-brand-magenta font-medium hover:bg-brand-magenta hover:text-white transition-all text-sm"
           >
-            {(() => {
-              try {
-                const u = JSON.parse(localStorage.getItem('user'));
-                return u?.role === 'seller' ? 'My Shop' : 'Want to sell?';
-              } catch (e) { return 'Want to sell?'; }
-            })()}
+            {user?.role === 'seller' ? 'My Shop' : 'Want to sell?'}
           </button>
           <LanguageSwitcher />
           <CartIcon count={count} onClick={() => setCartOpen(!cartOpen)} />

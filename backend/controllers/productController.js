@@ -21,7 +21,21 @@ exports.getProductById = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ message: 'Product not found' });
-    res.json(product);
+
+    // Fetch seller info
+    const Seller = require('../models/Seller');
+    const seller = await Seller.findOne({ user: product.user });
+
+    const productData = product.toObject();
+    if (seller) {
+      productData.seller = {
+        shopName: seller.shopName,
+        shopLocation: seller.shopLocation,
+        shopPhone: seller.shopPhone
+      };
+    }
+
+    res.json(productData);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -33,12 +47,12 @@ exports.createProduct = async (req, res) => {
     const { name, price = 0, description = '', image = '', category = '', countInStock = 0, featured = false } = req.body;
 
     // Ensure user is attached (from auth middleware)
-    if (!req.user || !req.user._id) {
+    if (!req.user || !req.user.id) {
       return res.status(401).json({ message: 'User not authenticated' });
     }
 
     const product = new Product({
-      user: req.user._id,
+      user: req.user.id,
       name,
       price,
       description,

@@ -20,20 +20,41 @@ export default function ProductList() {
   ];
 
   useEffect(() => {
-    setLoading(true);
-    // Simulate slight delay for "loading" feel
-    const timer = setTimeout(() => {
-      let filtered;
-      if (activeCategory === 'all') {
-        filtered = staticProducts.filter(p => p.featured).slice(0, 8);
-      } else {
-        filtered = staticProducts.filter(p => p.category === activeCategory);
-      }
-      setProducts(filtered);
-      setLoading(false);
-    }, 300);
+    const fetchProducts = async () => {
+      setLoading(true);
+      try {
+        // Build query for backend
+        let query = activeCategory === 'all' ? 'featured=true' : `category=${activeCategory}`;
 
-    return () => clearTimeout(timer);
+        let backendProducts = [];
+        try {
+          const res = await fetch(`http://localhost:5000/api/products?${query}`);
+          if (res.ok) {
+            backendProducts = await res.json();
+          }
+        } catch (err) {
+          console.error("Failed to fetch products from backend", err);
+        }
+
+        let displayProducts;
+        if (activeCategory === 'all') {
+          const staticFeatured = staticProducts.filter(p => p.featured);
+          displayProducts = [...backendProducts, ...staticFeatured].slice(0, 8);
+        } else {
+          // Filter static products by category and combine with backend results
+          const staticFiltered = staticProducts.filter(p => p.category === activeCategory);
+          displayProducts = [...backendProducts, ...staticFiltered];
+        }
+
+        setProducts(displayProducts);
+      } catch (err) {
+        console.error("Error in ProductList useEffect", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
   }, [activeCategory]);
 
   const addToCart = (productToAdd) => {
@@ -98,10 +119,21 @@ export default function ProductList() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
           {products.map((product) => (
-            <div key={product.id} className="bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group border border-brand-gray/50 flex flex-col">
+            <div key={product.id || product._id} className="bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group border border-brand-gray/50 flex flex-col">
+              {/* Product Info - Now at the Top */}
+              <div className="p-5 pb-2">
+                <h3
+                  className="text-lg font-bold text-brand-dark mb-1 group-hover:text-brand-magenta transition-colors line-clamp-1 cursor-pointer"
+                  onClick={() => navigate(`/products/${product.id || product._id}`)}
+                >
+                  {product.name}
+                </h3>
+                <p className="text-gray-400 text-xs uppercase tracking-wider">{product.category}</p>
+              </div>
+
               <div
                 className="relative overflow-hidden aspect-[4/3] cursor-pointer"
-                onClick={() => navigate(`/products/${product.id}`)}
+                onClick={() => navigate(`/products/${product.id || product._id}`)}
               >
                 <img
                   src={product.image || 'https://via.placeholder.com/400x300'}
@@ -116,15 +148,7 @@ export default function ProductList() {
                 )}
               </div>
 
-              <div className="p-5 flex flex-col flex-grow">
-                <h3
-                  className="text-lg font-bold text-brand-dark mb-1 group-hover:text-brand-magenta transition-colors line-clamp-1 cursor-pointer"
-                  onClick={() => navigate(`/products/${product.id}`)}
-                >
-                  {product.name}
-                </h3>
-                <p className="text-gray-400 text-xs mb-3 uppercase tracking-wider">{product.category}</p>
-
+              <div className="p-5 pt-3 flex flex-col flex-grow">
                 <div className="flex justify-between items-center mb-4 mt-auto">
                   <p className="text-brand-magenta font-bold text-xl">Rs. {product.price}</p>
                   <div className="flex gap-0.5">
@@ -139,7 +163,7 @@ export default function ProductList() {
                 <div className="flex gap-2">
                   <button
                     className="flex-1 px-3 py-2 rounded-lg border border-brand-dark text-brand-dark font-medium hover:bg-brand-dark hover:text-white transition-colors duration-300 text-xs"
-                    onClick={() => navigate(`/products/${product.id}`)}
+                    onClick={() => navigate(`/products/${product.id || product._id}`)}
                   >
                     Details
                   </button>

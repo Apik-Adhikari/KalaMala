@@ -11,13 +11,15 @@ app.use(express.json());
 app.use(cors());
 
 // Import routes
+// Import routes
 const userRoutes = require('./routes/userRoutes');
 const productRoutes = require('./routes/productRoutes');
-// Add other routes as needed
+const sellerRoutes = require('./routes/sellerRoutes');
 
 // Use routes
 app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/sellers', sellerRoutes);
 
 // Root route
 app.get('/', (req, res) => {

@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../../../context/LanguageContext";
+import { useAuth } from "../../../context/AuthContext";
 
 export default function LoginModal({ onClose, onSwitch }) {
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -22,10 +24,9 @@ export default function LoginModal({ onClose, onSwitch }) {
       });
       const data = await res.json();
       if (res.ok) {
-        // save token and user
+        // save token and user in context
         if (data.token) {
-          localStorage.setItem('token', data.token);
-          localStorage.setItem('user', JSON.stringify({ _id: data._id, name: data.username, email: data.email }));
+          login({ _id: data._id, name: data.username, email: data.email, role: data.role }, data.token);
         }
         onClose && onClose();
         navigate('/');

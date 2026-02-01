@@ -23,4 +23,6 @@ router.get('/profile', authMiddleware, getUserProfile);
 // @access  Private
 router.put('/profile', authMiddleware, updateUserProfile);
 
+
+
 module.exports = router;

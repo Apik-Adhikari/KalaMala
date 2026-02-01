@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../../../context/LanguageContext";
+import { useAuth } from "../../../context/AuthContext";
 
 // Simple flash message component
 function FlashMessage({ message, onClose }) {
@@ -16,6 +17,7 @@ function FlashMessage({ message, onClose }) {
 export default function RegisterModal({ onClose, onSwitch }) {
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const { register } = useAuth();
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -63,10 +65,9 @@ export default function RegisterModal({ onClose, onSwitch }) {
       if (res.ok) {
         setFlash("User registered successfully!");
         setFormData({ username: "", email: "", phone: "+977", password: "", confirmPassword: "" });
-        // Save token and user info to localStorage so the user is treated as logged in
+        // Save token and user info to context
         if (data.token) {
-          localStorage.setItem('token', data.token);
-          localStorage.setItem('user', JSON.stringify({ _id: data._id, name: data.username, email: data.email }));
+          register({ _id: data._id, name: data.username, email: data.email, role: data.role }, data.token);
         }
         setTimeout(() => {
           setFlash("");

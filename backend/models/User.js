@@ -17,11 +17,11 @@ const userSchema = new mongoose.Schema({
 		lowercase: true,
 		match: [/.+@.+\..+/, 'Please enter a valid email address']
 	},
-		phone: {
-			type: String,
-			required: [true, 'Phone number is required'],
-			match: [/^\+977[0-9]{10}$/, 'Please enter a valid Nepali phone number (e.g. +9779812345678)']
-		},
+	phone: {
+		type: String,
+		required: [true, 'Phone number is required'],
+		match: [/^\+977[0-9]{10}$/, 'Please enter a valid Nepali phone number (e.g. +9779812345678)']
+	},
 	password: {
 		type: String,
 		required: [true, 'Password is required'],
@@ -34,7 +34,7 @@ const userSchema = new mongoose.Schema({
 	// For future extensibility
 	role: {
 		type: String,
-		enum: ['user', 'admin'],
+		enum: ['user', 'admin', 'seller'],
 		default: 'user'
 	},
 	profileImage: {

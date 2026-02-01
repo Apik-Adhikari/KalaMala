@@ -9,16 +9,29 @@ export default function ProductDetailsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
-    // Simulate slight delay
-    const timer = setTimeout(() => {
-      // Check both id and _id since static data has both for compatibility
-      const found = staticProducts.find(p => p.id === id || p._id === id);
-      setProduct(found);
-      setLoading(false);
-    }, 200);
+    const fetchProduct = async () => {
+      setLoading(true);
+      try {
+        // Try fetching from backend first
+        const res = await fetch(`http://localhost:5000/api/products/${id}`);
+        if (res.ok) {
+          const data = await res.json();
+          setProduct(data);
+        } else {
+          // Fallback to static data if backend fails or product not found
+          const found = staticProducts.find(p => p.id === id || p._id === id);
+          setProduct(found);
+        }
+      } catch (err) {
+        console.error("Error fetching product details:", err);
+        const found = staticProducts.find(p => p.id === id || p._id === id);
+        setProduct(found);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    return () => clearTimeout(timer);
+    fetchProduct();
   }, [id]);
 
   if (loading) return (

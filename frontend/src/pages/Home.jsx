@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useAuth } from "../context/AuthContext";
 import ProductList from "../components/views/ProductList.jsx";
 import ProductDetails from "../components/views/ProductDetails.jsx";
 import Hero from "../components/views/Hero.jsx";
@@ -15,11 +16,11 @@ export default function Home() {
   };
 
 
+  const { user: authUser, token } = useAuth();
   const [user, setUser] = useState(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
-      const token = localStorage.getItem("token");
       if (!token) return;
       try {
         const res = await fetch("http://localhost:5000/api/users/profile", {

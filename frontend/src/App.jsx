@@ -2,7 +2,6 @@ import Header from "./components/header/Header.jsx";
 import Home from "./pages/Home.jsx";
 import RegisterModal from "./components/header/auth/RegisterModal.jsx";
 import LoginModal from "./components/header/auth/LoginModal.jsx";
-import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import "./index.css";
 import Footer from "./components/footer/Footer.jsx";
 

@@ -8,7 +8,10 @@ const {
 	getProductById,
 	createProduct,
 	updateProduct,
-	deleteProduct
+	deleteProduct,
+	createProductReview,
+	updateProductReview,
+	deleteProductReview
 } = require('../controllers/productController');
 
 // GET /api/products - Get all products
@@ -25,5 +28,14 @@ router.put('/:id', authMiddleware, updateProduct);
 
 // DELETE /api/products/:id - Delete a product
 router.delete('/:id', authMiddleware, deleteProduct);
+
+// POST /api/products/:id/reviews - Create a review
+router.post('/:id/reviews', authMiddleware, createProductReview);
+
+// PUT /api/products/:id/reviews/:reviewId - Update a review
+router.put('/:id/reviews/:reviewId', authMiddleware, updateProductReview);
+
+// DELETE /api/products/:id/reviews/:reviewId - Delete a review
+router.delete('/:id/reviews/:reviewId', authMiddleware, deleteProductReview);
 
 module.exports = router;

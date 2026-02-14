@@ -2,8 +2,11 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../context/LanguageContext";
 
+import { useAuth } from "../context/AuthContext";
+
 export default function CartPage() {
   const { t } = useLanguage();
+  const { user, token } = useAuth();
   const [items, setItems] = useState([]);
   const navigate = useNavigate();
 
@@ -32,8 +35,85 @@ export default function CartPage() {
   };
 
   const removeItem = (id) => {
-    const next = items.filter((it) => it.id !== id);
+    const next = items.filter((it) => (it.id || it._id) !== id);
     persist(next);
+  };
+
+  const handleCheckout = async () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    const address = prompt("Enter Shipping Address:", "Kathmandu");
+    const city = prompt("Enter City:", "Kathmandu");
+    const province = prompt("Enter Province:", "Bagmati");
+    const phone = prompt("Enter Phone Number:", user.phone || "9800000000");
+
+    if (!address || !city || !province || !phone) {
+      alert("Please provide all shipping details");
+      return;
+    }
+
+    try {
+      const orderData = {
+        orderItems: items.map(it => ({
+          name: it.name,
+          qty: it.qty || 1,
+          image: it.image,
+          price: it.price,
+          product: it.id || it._id
+        })),
+        shippingAddress: { address, city, province, phone },
+        totalPrice: totalPrice,
+      };
+
+      console.log('Sending Order Data:', orderData);
+
+      const res = await fetch('http://localhost:5000/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(orderData)
+      });
+
+      if (res.ok) {
+        const responseData = await res.json();
+        console.log('Backend Response:', responseData);
+
+        const { esewaData } = responseData;
+
+        if (!esewaData) {
+          throw new Error('eSewa data missing from backend response');
+        }
+
+        // Create a form dynamically and submit to eSewa
+        console.log('Redirecting to eSewa with data:', esewaData);
+        const form = document.createElement('form');
+        form.setAttribute('method', 'POST');
+        form.setAttribute('action', 'https://rc-epay.esewa.com.np/api/epay/main/v2/form');
+
+        for (const key in esewaData) {
+          const hiddenField = document.createElement('input');
+          hiddenField.setAttribute('type', 'hidden');
+          hiddenField.setAttribute('name', key);
+          hiddenField.setAttribute('value', esewaData[key]);
+          form.appendChild(hiddenField);
+        }
+
+        document.body.appendChild(form);
+        form.submit();
+      } else {
+        const error = await res.json();
+        console.error('Checkout failed:', error);
+        alert(error.message || 'Checkout failed');
+      }
+    } catch (err) {
+      console.error('Checkout Error:', err);
+      alert('An error occurred during checkout: ' + err.message);
+    }
   };
 
   if (!items || items.length === 0) {
@@ -61,7 +141,7 @@ export default function CartPage() {
       <div className="bg-white rounded-2xl shadow-sm border border-brand-gray/50 overflow-hidden">
         <ul className="divide-y divide-brand-gray/50">
           {items.map((it) => (
-            <li key={it.id} className="p-6 flex items-center gap-6 hover:bg-brand-gray/10 transition-colors">
+            <li key={it.id || it._id} className="p-6 flex items-center gap-6 hover:bg-brand-gray/10 transition-colors">
               <img src={it.image} alt={it.name} className="w-24 h-24 object-cover rounded-lg shadow-sm" />
               <div className="flex-1">
                 <div className="flex justify-between mb-2">
@@ -72,21 +152,21 @@ export default function CartPage() {
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-3 bg-brand-gray/30 rounded-lg p-1">
                     <button
-                      onClick={() => updateQty(it.id, Math.max(1, (it.qty || 1) - 1))}
+                      onClick={() => updateQty(it.id || it._id, Math.max(1, (it.qty || 1) - 1))}
                       className="w-8 h-8 flex items-center justify-center bg-white rounded-md shadow-sm hover:bg-gray-100 font-bold text-gray-600 transition-colors"
                     >
                       -
                     </button>
                     <div className="w-8 text-center font-bold text-brand-dark">{it.qty || 1}</div>
                     <button
-                      onClick={() => updateQty(it.id, (it.qty || 1) + 1)}
+                      onClick={() => updateQty(it.id || it._id, (it.qty || 1) + 1)}
                       className="w-8 h-8 flex items-center justify-center bg-white rounded-md shadow-sm hover:bg-gray-100 font-bold text-gray-600 transition-colors"
                     >
                       +
                     </button>
                   </div>
                   <button
-                    onClick={() => removeItem(it.id)}
+                    onClick={() => removeItem(it.id || it._id)}
                     className="text-red-500 font-medium hover:text-red-700 hover:underline transition-colors text-sm"
                   >
                     {t('cart_item_remove')}
@@ -110,7 +190,7 @@ export default function CartPage() {
               {t('cart_browse')}
             </button>
             <button
-              onClick={() => alert('Checkout flow not implemented yet')}
+              onClick={handleCheckout}
               className="px-8 py-3 bg-brand-magenta text-white font-bold rounded-xl hover:bg-pink-700 transition-all duration-300 shadow-lg shadow-brand-magenta/20 hover:-translate-y-1"
             >
               {t('cart_checkout')}

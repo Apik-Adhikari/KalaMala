@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../../context/LanguageContext";
+import { useAuth } from "../../context/AuthContext";
 import { staticProducts } from "../../data/products";
 
 export default function ProductList() {
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const { user } = useAuth();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState('all');
@@ -58,6 +60,10 @@ export default function ProductList() {
   }, [activeCategory]);
 
   const addToCart = (productToAdd) => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
     try {
       const raw = localStorage.getItem("cart");
       const cart = raw ? JSON.parse(raw) : [];

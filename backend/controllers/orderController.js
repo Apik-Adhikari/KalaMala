@@ -116,3 +116,50 @@ exports.updateOrderToPaid = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+// @desc    Get sales trends for seller
+// @route   GET /api/orders/sales-trends
+// @access  Private/Seller
+exports.getSalesTrends = async (req, res) => {
+    try {
+        const sellerId = req.user.id;
+
+        // Aggregate sales data for the seller's products
+        const salesData = await Order.aggregate([
+            { $unwind: '$orderItems' },
+            {
+                $lookup: {
+                    from: 'products',
+                    localField: 'orderItems.product',
+                    foreignField: '_id',
+                    as: 'productInfo'
+                }
+            },
+            { $unwind: '$productInfo' },
+            {
+                $match: {
+                    'productInfo.user': new mongoose.Types.ObjectId(sellerId),
+                    isPaid: true
+                }
+            },
+            {
+                $group: {
+                    _id: {
+                        $dateToString: { format: '%Y-%m-%d', date: '$paidAt' }
+                    },
+                    totalSales: { $sum: { $multiply: ['$orderItems.qty', '$orderItems.price'] } }
+                }
+            },
+            { $sort: { _id: 1 } }
+        ]);
+
+        const formattedData = salesData.map(item => ({
+            date: item._id,
+            sales: item.totalSales
+        }));
+
+        res.json(formattedData);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};

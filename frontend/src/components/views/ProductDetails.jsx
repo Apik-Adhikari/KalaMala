@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../../context/LanguageContext";
 import { useAuth } from "../../context/AuthContext";
@@ -7,6 +7,26 @@ export default function ProductDetails({ product }) {
   const navigate = useNavigate();
   const { user, token } = useAuth();
   const { t } = useLanguage();
+  const [recommendations, setRecommendations] = useState([]);
+
+  useEffect(() => {
+    if (product && (product._id || product.id)) {
+      fetchRecommendations(product._id || product.id);
+    }
+  }, [product]);
+
+  const fetchRecommendations = async (id) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/products/${id}/recommendations`);
+      const data = await res.json();
+      if (res.ok) {
+        setRecommendations(data);
+      }
+    } catch (err) {
+      console.error('Error fetching recommendations:', err);
+    }
+  };
+
   if (!product) return null;
 
   const addToCart = (productToAdd) => {
@@ -138,6 +158,37 @@ export default function ProductDetails({ product }) {
           </div>
         </div>
       </section>
+
+      {/* Recommendations Section */}
+      {recommendations.length > 0 && (
+        <section className="max-w-4xl mx-auto px-8 pb-16">
+          <h3 className="text-2xl font-serif font-bold text-brand-dark mb-8">You May Also Like</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {recommendations.map((rec) => (
+              <div
+                key={rec._id}
+                onClick={() => {
+                  navigate(`/products/${rec._id}`);
+                  window.scrollTo(0, 0);
+                }}
+                className="bg-white rounded-2xl border border-brand-gray/30 overflow-hidden shadow-sm hover:shadow-md transition-all cursor-pointer group"
+              >
+                <div className="aspect-square relative overflow-hidden">
+                  <img
+                    src={rec.image || 'https://via.placeholder.com/300x300'}
+                    alt={rec.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                </div>
+                <div className="p-4">
+                  <h4 className="font-bold text-brand-dark text-sm truncate group-hover:text-brand-magenta transition-colors">{rec.name}</h4>
+                  <p className="text-brand-magenta font-bold text-sm mt-1">Rs. {rec.price}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Reviews Section */}
       <section className="max-w-4xl mx-auto px-8 pb-20">

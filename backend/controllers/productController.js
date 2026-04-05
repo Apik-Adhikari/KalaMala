@@ -1,15 +1,19 @@
 const Product = require('../models/Product');
 const User = require('../models/User');
+const Order = require('../models/Order'); // Added for recommendations
 const mongoose = require('mongoose');
 
 // GET /api/products?featured=true&seller=id
 exports.getProducts = async (req, res) => {
   try {
-    const { featured, category, seller } = req.query;
+    const { featured, category, seller, search } = req.query;
     const filter = {};
     if (featured === 'true') filter.featured = true;
     if (category) filter.category = category;
     if (seller) filter.user = seller;
+    if (search) {
+      filter.name = { $regex: search, $options: 'i' };
+    }
 
     const products = await Product.find(filter).sort({ createdAt: -1 });
     res.json(products);
@@ -227,6 +231,75 @@ exports.deleteProductReview = async (req, res) => {
     } else {
       res.status(404).json({ message: 'Product not found' });
     }
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// @desc    Get recommended products (Collaborative Filtering: Users who bought this also bought)
+// @route   GET /api/products/:id/recommendations
+// @access  Public
+exports.getRecommendedProducts = async (req, res) => {
+  try {
+    const productId = req.params.id;
+
+    // 1. Find orders that contain this product
+    const ordersWithProduct = await Order.find({
+      'orderItems.product': productId,
+      isPaid: true
+    }).select('user');
+
+    if (!ordersWithProduct.length) {
+      // Fallback: return featured products if no order history
+      const fallback = await Product.find({ _id: { $ne: productId } }).limit(4);
+      return res.json(fallback);
+    }
+
+    // 2. Extract unique users who bought this product
+    const users = ordersWithProduct.map(o => o.user);
+
+    // 3. Find other products bought by these users
+    const relatedOrders = await Order.find({
+      user: { $in: users },
+      isPaid: true
+    }).select('orderItems');
+
+    const productCounts = {};
+    relatedOrders.forEach(order => {
+      order.orderItems.forEach(item => {
+        const id = item.product.toString();
+        if (id !== productId) {
+          productCounts[id] = (productCounts[id] || 0) + 1;
+        }
+      });
+    });
+
+    // 4. Sort by frequency and fetch product details
+    const sortedProductIds = Object.keys(productCounts)
+      .sort((a, b) => productCounts[b] - productCounts[a])
+      .slice(0, 4);
+
+    const recommendedProducts = await Product.find({
+      _id: { $in: sortedProductIds }
+    });
+
+    res.json(recommendedProducts);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// @desc    Get low stock alerts for seller
+// @route   GET /api/products/alerts
+// @access  Private/Seller
+exports.getInventoryAlerts = async (req, res) => {
+  try {
+    const threshold = 5;
+    const alerts = await Product.find({
+      user: req.user.id,
+      countInStock: { $lt: threshold }
+    });
+    res.json(alerts);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

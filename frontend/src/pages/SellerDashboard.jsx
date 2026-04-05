@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit, Trash, Package } from 'lucide-react';
+import { Plus, Edit, Trash, Package, AlertCircle, TrendingUp } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import SalesChart from '../components/views/SalesChart.jsx';
 
 export default function SellerDashboard() {
     const navigate = useNavigate();
     const { user, token } = useAuth();
     const [products, setProducts] = useState([]);
+    const [alerts, setAlerts] = useState([]);
+    const [salesTrends, setSalesTrends] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
@@ -21,7 +24,17 @@ export default function SellerDashboard() {
             return;
         }
 
-        fetchMyProducts(user._id);
+        const fetchData = async () => {
+            setLoading(true);
+            await Promise.all([
+                fetchMyProducts(user._id),
+                fetchAlerts(),
+                fetchSalesTrends()
+            ]);
+            setLoading(false);
+        };
+
+        fetchData();
     }, [user, navigate]);
 
     const fetchMyProducts = async (userId) => {
@@ -35,8 +48,30 @@ export default function SellerDashboard() {
             }
         } catch (err) {
             setError('Error connecting to server');
-        } finally {
-            setLoading(false);
+        }
+    };
+
+    const fetchAlerts = async () => {
+        try {
+            const res = await fetch(`http://localhost:5000/api/products/alerts`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (res.ok) setAlerts(data);
+        } catch (err) {
+            console.error('Error fetching alerts:', err);
+        }
+    };
+
+    const fetchSalesTrends = async () => {
+        try {
+            const res = await fetch(`http://localhost:5000/api/orders/sales-trends`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (res.ok) setSalesTrends(data);
+        } catch (err) {
+            console.error('Error fetching sales trends:', err);
         }
     };
 
@@ -82,7 +117,7 @@ export default function SellerDashboard() {
                     </button>
                 </div>
 
-                {/* Stats/Overview (Placeholder) */}
+                {/* Stats/Overview */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                         <div className="flex items-center gap-4">
@@ -95,7 +130,54 @@ export default function SellerDashboard() {
                             </div>
                         </div>
                     </div>
-                    {/* Additional stats can go here */}
+
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                        <div className="flex items-center gap-4">
+                            <div className="p-3 bg-green-50 text-green-600 rounded-xl">
+                                <TrendingUp className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-500 font-medium">Active Alerts</p>
+                                <h3 className="text-2xl font-bold text-gray-900">{alerts.length}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+                    {/* Sales Analytics */}
+                    <div className="lg:col-span-2">
+                        <SalesChart data={salesTrends} />
+                    </div>
+
+                    {/* Inventory Alerts */}
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                        <div className="flex items-center gap-2 mb-4">
+                            <AlertCircle className="w-5 h-5 text-brand-magenta" />
+                            <h2 className="text-xl font-bold text-gray-900">Inventory Alerts</h2>
+                        </div>
+
+                        <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2">
+                            {alerts.length === 0 ? (
+                                <p className="text-gray-500 text-sm italic">All items are sufficiently stocked.</p>
+                            ) : (
+                                alerts.map(product => (
+                                    <div key={product._id} className="flex items-center justify-between p-3 bg-red-50 rounded-xl border border-red-100">
+                                        <div className="flex flex-col">
+                                            <span className="font-semibold text-gray-900 text-sm truncate max-w-[150px]">{product.name}</span>
+                                            <span className="text-xs text-red-600 font-bold">{product.countInStock} Left</span>
+                                        </div>
+                                        <button
+                                            onClick={() => navigate(`/edit-product/${product._id}`)}
+                                            className="text-xs font-bold text-brand-magenta hover:underline"
+                                        >
+                                            Restock
+                                        </button>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
                 </div>
 
                 {/* Products List */}

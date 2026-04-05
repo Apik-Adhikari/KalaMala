@@ -2,12 +2,15 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../../context/LanguageContext";
 import { useAuth } from "../../context/AuthContext";
+import { useSearch } from "../../context/SearchContext";
 import { staticProducts } from "../../data/products";
+import HighlightedText from "./HighlightedText.jsx";
 
 export default function ProductList() {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { user } = useAuth();
+  const { searchQuery } = useSearch();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState('all');
@@ -26,11 +29,22 @@ export default function ProductList() {
       setLoading(true);
       try {
         // Build query for backend
-        let query = activeCategory === 'all' ? 'featured=true' : `category=${activeCategory}`;
+        let queryParams = [];
+        if (activeCategory !== 'all') {
+          queryParams.push(`category=${activeCategory}`);
+        } else {
+          queryParams.push('featured=true');
+        }
+
+        if (searchQuery) {
+          queryParams.push(`search=${searchQuery}`);
+        }
+
+        const queryString = queryParams.join('&');
 
         let backendProducts = [];
         try {
-          const res = await fetch(`http://localhost:5000/api/products?${query}`);
+          const res = await fetch(`http://localhost:5000/api/products?${queryString}`);
           if (res.ok) {
             backendProducts = await res.json();
           }
@@ -41,14 +55,28 @@ export default function ProductList() {
         let displayProducts;
         if (activeCategory === 'all') {
           const staticFeatured = staticProducts.filter(p => p.featured);
-          displayProducts = [...backendProducts, ...staticFeatured].slice(0, 8);
+          displayProducts = [...backendProducts, ...staticFeatured];
         } else {
           // Filter static products by category and combine with backend results
           const staticFiltered = staticProducts.filter(p => p.category === activeCategory);
           displayProducts = [...backendProducts, ...staticFiltered];
         }
 
-        setProducts(displayProducts);
+        // Apply client-side search filtering for static products (or if backend filtering is incomplete)
+        if (searchQuery) {
+          const lowerQuery = searchQuery.toLowerCase();
+          displayProducts = displayProducts.filter(p =>
+            p.name.toLowerCase().includes(lowerQuery)
+          );
+        }
+
+        // Limit to 8 if featured/all, or just set products
+        if (activeCategory === 'all' && !searchQuery) {
+          setProducts(displayProducts.slice(0, 8));
+        } else {
+          setProducts(displayProducts);
+        }
+
       } catch (err) {
         console.error("Error in ProductList useEffect", err);
       } finally {
@@ -57,7 +85,7 @@ export default function ProductList() {
     };
 
     fetchProducts();
-  }, [activeCategory]);
+  }, [activeCategory, searchQuery]);
 
   const addToCart = (productToAdd) => {
     if (!user) {
@@ -120,7 +148,9 @@ export default function ProductList() {
         </div>
       ) : products.length === 0 ? (
         <div className="text-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
-          <p className="text-gray-400 text-lg">No products found in this category.</p>
+          <p className="text-gray-400 text-lg">
+            {searchQuery ? `No products found matching "${searchQuery}"` : "No products found in this category."}
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
@@ -132,7 +162,7 @@ export default function ProductList() {
                   className="text-lg font-bold text-brand-dark mb-1 group-hover:text-brand-magenta transition-colors line-clamp-1 cursor-pointer"
                   onClick={() => navigate(`/products/${product.id || product._id}`)}
                 >
-                  {product.name}
+                  <HighlightedText text={product.name} highlight={searchQuery} />
                 </h3>
                 <p className="text-gray-400 text-xs uppercase tracking-wider">{product.category}</p>
               </div>

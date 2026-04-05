@@ -1,3 +1,4 @@
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Header from "./components/header/Header.jsx";
 import Home from "./pages/Home.jsx";
 import RegisterModal from "./components/header/auth/RegisterModal.jsx";
@@ -18,34 +19,37 @@ import PaymentFailure from "./pages/PaymentFailure.jsx";
 
 import { LanguageProvider } from "./context/LanguageContext.jsx";
 import { AuthProvider } from "./context/AuthContext.jsx";
+import { SearchProvider } from "./context/SearchContext.jsx";
 
 function App() {
   return (
     <LanguageProvider>
       <AuthProvider>
-        <BrowserRouter>
-          <div className="flex flex-col min-h-screen">
-            <Header />
-            <main className="flex-1">
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/products" element={<ProductsPage />} />
-                <Route path="/products/:id" element={<ProductDetailsPage />} />
-                <Route path="/cart" element={<CartPage />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/register" element={<RegisterModal />} />
-                <Route path="/login" element={<LoginModal />} />
-                <Route path="/become-seller" element={<BecomeSeller />} />
-                <Route path="/add-product" element={<AddProduct />} />
-                <Route path="/seller-dashboard" element={<SellerDashboard />} />
-                <Route path="/edit-product/:id" element={<EditProduct />} />
-                <Route path="/payment-success" element={<PaymentSuccess />} />
-                <Route path="/payment-failure" element={<PaymentFailure />} />
-              </Routes>
-            </main>
-            <Footer />
-          </div>
-        </BrowserRouter>
+        <SearchProvider>
+          <BrowserRouter>
+            <div className="flex flex-col min-h-screen">
+              <Header />
+              <main className="flex-1">
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/products" element={<ProductsPage />} />
+                  <Route path="/products/:id" element={<ProductDetailsPage />} />
+                  <Route path="/cart" element={<CartPage />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/register" element={<RegisterModal />} />
+                  <Route path="/login" element={<LoginModal />} />
+                  <Route path="/become-seller" element={<BecomeSeller />} />
+                  <Route path="/add-product" element={<AddProduct />} />
+                  <Route path="/seller-dashboard" element={<SellerDashboard />} />
+                  <Route path="/edit-product/:id" element={<EditProduct />} />
+                  <Route path="/payment-success" element={<PaymentSuccess />} />
+                  <Route path="/payment-failure" element={<PaymentFailure />} />
+                </Routes>
+              </main>
+              <Footer />
+            </div>
+          </BrowserRouter>
+        </SearchProvider>
       </AuthProvider>
     </LanguageProvider>
   );

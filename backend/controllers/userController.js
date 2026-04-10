@@ -52,6 +52,10 @@ exports.loginUser = async (req, res) => {
 		const { email, password } = req.body;
 		const user = await User.findOne({ email });
 		if (user && (await user.matchPassword(password))) {
+			// **STORE LOGIN DATA IN DATABASE**
+			user.lastLogin = Date.now();
+			await user.save();
+
 			const token = generateToken(user._id);
 			return res.json({
 				_id: user._id,

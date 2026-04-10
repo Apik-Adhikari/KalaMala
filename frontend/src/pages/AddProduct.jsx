@@ -12,14 +12,27 @@ export default function AddProduct() {
         name: '',
         price: '',
         description: '',
-        image: '',
+        images: [null, null, null, null, null], // 5 image slots
         category: PRODUCT_CATEGORIES[0], // Set default category
         countInStock: '',
         featured: true
     });
 
+    const handleImageChange = (idx, file) => {
+        if (file && file.size > 2 * 1024 * 1024) {
+            setError(`Image ${file.name} is too large. Max size is 2 MB.`);
+            // Do not update the image slot if file is too large
+            return;
+        }
+        setError('');
+        const newImages = [...formData.images];
+        newImages[idx] = file;
+        setFormData({ ...formData, images: newImages });
+    };
+
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
     };
 
     const handleSubmit = async (e) => {
@@ -27,19 +40,36 @@ export default function AddProduct() {
         setLoading(true);
         setError('');
 
+        // At least one image is required
+        if (!formData.images[0]) {
+            setError('At least one product image is required.');
+            setLoading(false);
+            return;
+        }
+
         try {
             if (!token) {
                 navigate('/login');
                 return;
             }
 
+            const form = new FormData();
+            Object.entries(formData).forEach(([key, value]) => {
+                if (key === 'images') {
+                    value.forEach((file) => {
+                        if (file) form.append('images', file);
+                    });
+                } else {
+                    form.append(key, value);
+                }
+            });
+
             const res = await fetch('http://localhost:5000/api/products', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify(formData)
+                body: form
             });
 
             const data = await res.json();
@@ -129,17 +159,31 @@ export default function AddProduct() {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
-                            <input
-                                type="text"
-                                name="image"
-                                required
-                                value={formData.image}
-                                onChange={handleChange}
-                                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-magenta/20 focus:border-brand-magenta outline-none transition-all"
-                                placeholder="https://example.com/image.jpg"
-                            />
-                            <p className="text-xs text-gray-500 mt-1">Provides a direct link to the product image.</p>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Product Images</label>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                {[0, 1, 2, 3, 4].map((idx) => (
+                                    <div key={idx} className="flex flex-col">
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            required={idx === 0}
+                                            onChange={e => handleImageChange(idx, e.target.files[0])}
+                                            className="px-2 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-magenta/20 focus:border-brand-magenta outline-none transition-all bg-white"
+                                        />
+                                        {formData.images[idx] && (
+                                            <img
+                                                src={URL.createObjectURL(formData.images[idx])}
+                                                alt={`preview-${idx}`}
+                                                className="w-20 h-20 object-cover rounded border border-gray-200 shadow mt-2"
+                                            />
+                                        )}
+                                        <span className="text-xs text-gray-500 mt-1">
+                                            {idx === 0 ? 'Required' : 'Optional'}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                            <p className="text-xs text-gray-500 mt-2">First image is required, others are optional.</p>
                         </div>
 
                         <div>

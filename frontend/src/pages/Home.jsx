@@ -9,6 +9,7 @@ export default function Home() {
 
   const handleViewDetails = (product) => {
     setSelectedProduct(product);
+    window.scrollTo(0, 0);
   };
 
   const handleBack = () => {

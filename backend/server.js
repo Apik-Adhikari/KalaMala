@@ -6,9 +6,14 @@ const connectDB = require('./config/db');
 dotenv.config();
 connectDB();
 
+
 const app = express();
 app.use(express.json());
 app.use(cors());
+
+// Serve uploaded images statically
+const path = require('path');
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Import routes
 // Import routes
@@ -16,6 +21,7 @@ const userRoutes = require('./routes/userRoutes');
 const productRoutes = require('./routes/productRoutes');
 const sellerRoutes = require('./routes/sellerRoutes');
 const orderRoutes = require('./routes/orderRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 
 // Request Logger
 app.use((req, res, next) => {
@@ -24,6 +30,7 @@ app.use((req, res, next) => {
 });
 
 // Use routes
+app.use('/api/admin', adminRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/sellers', sellerRoutes);

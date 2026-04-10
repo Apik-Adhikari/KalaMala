@@ -1,7 +1,7 @@
 import ProductDetails from "../components/views/ProductDetails.jsx";
 import { useParams } from "react-router-dom";
 import React, { useEffect, useState } from "react";
-import { staticProducts } from "../data/products";
+
 
 export default function ProductDetailsPage() {
   const { id } = useParams();
@@ -19,12 +19,12 @@ export default function ProductDetailsPage() {
           setProduct(data);
         } else {
           // Fallback to static data if backend fails or product not found
-          const found = staticProducts.find(p => p.id === id || p._id === id);
+          const found = null;
           setProduct(found);
         }
       } catch (err) {
         console.error("Error fetching product details:", err);
-        const found = staticProducts.find(p => p.id === id || p._id === id);
+        const found = null;
         setProduct(found);
       } finally {
         setLoading(false);
@@ -32,6 +32,10 @@ export default function ProductDetailsPage() {
     };
 
     fetchProduct();
+  }, [id]);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
   }, [id]);
 
   if (loading) return (

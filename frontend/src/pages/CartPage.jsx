@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../context/LanguageContext";
 
 import { useAuth } from "../context/AuthContext";
+import { getImageUrl } from "../utils/imageUtils";
 
 export default function CartPage() {
   const { t } = useLanguage();
@@ -142,7 +143,7 @@ export default function CartPage() {
         <ul className="divide-y divide-brand-gray/50">
           {items.map((it) => (
             <li key={it.id || it._id} className="p-6 flex items-center gap-6 hover:bg-brand-gray/10 transition-colors">
-              <img src={it.image} alt={it.name} className="w-24 h-24 object-cover rounded-lg shadow-sm" />
+              <img src={getImageUrl(it.image)} alt={it.name} className="w-24 h-24 object-cover rounded-lg shadow-sm" />
               <div className="flex-1">
                 <div className="flex justify-between mb-2">
                   <h3 className="font-bold text-lg text-brand-dark">{it.name}</h3>

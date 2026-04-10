@@ -47,14 +47,24 @@ exports.getProductById = async (req, res) => {
   }
 };
 
-// POST /api/products - create a product
+// POST /api/products - create a product (with images)
 exports.createProduct = async (req, res) => {
   try {
-    const { name, price = 0, description = '', image = '', category = '', countInStock = 0, featured = false } = req.body;
+    // Debug log for troubleshooting
+    console.log('REQ.BODY:', req.body);
+    console.log('REQ.FILES:', req.files);
+
+    const { name, price = 0, description = '', category = '', countInStock = 0, featured = false } = req.body;
 
     // Ensure user is attached (from auth middleware)
     if (!req.user || !req.user.id) {
       return res.status(401).json({ message: 'User not authenticated' });
+    }
+
+    // Handle uploaded images
+    let images = [];
+    if (req.files && req.files.length > 0) {
+      images = req.files.map(file => file.path.replace(/\\/g, '/').replace('backend/', ''));
     }
 
     const product = new Product({
@@ -62,7 +72,8 @@ exports.createProduct = async (req, res) => {
       name,
       price,
       description,
-      image,
+      image: images[0] || '', // For backward compatibility
+      images,
       category,
       countInStock,
       featured
@@ -78,8 +89,47 @@ exports.createProduct = async (req, res) => {
 // PUT /api/products/:id
 exports.updateProduct = async (req, res) => {
   try {
+    console.log('UPDATE REQ.BODY:', req.body);
+    console.log('UPDATE REQ.FILES:', req.files);
+    
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ message: 'Product not found' });
+
+    // Handle images
+    let finalImages = [];
+    let imageUpdate = false;
+
+    if (req.body.imageOrder) {
+      imageUpdate = true;
+      try {
+        const order = JSON.parse(req.body.imageOrder);
+        const newUploads = req.files ? req.files.map(file => file.path.replace(/\\/g, '/').replace('backend/', '')) : [];
+        let fileIdx = 0;
+
+        finalImages = order.map(item => {
+          if (item && typeof item === 'string' && item.startsWith('FILE_')) {
+            return newUploads[fileIdx++] || null;
+          }
+          return item; // It's an existing path or null
+        }).filter(img => img !== null);
+      } catch (err) {
+        console.error('Error parsing imageOrder:', err);
+      }
+    } else if (req.files && req.files.length > 0) {
+      // Legacy or fallback: replace all with new uploads
+      imageUpdate = true;
+      finalImages = req.files.map(file => file.path.replace(/\\/g, '/').replace('backend/', ''));
+    }
+
+    if (imageUpdate) {
+      req.body.images = finalImages;
+      req.body.image = finalImages[0] || '';
+    }
+
+    // Clean up req.body before assign
+    delete req.body.existingImages;
+    delete req.body.imageOrder;
+
     Object.assign(product, req.body);
     const updated = await product.save();
     res.json(updated);

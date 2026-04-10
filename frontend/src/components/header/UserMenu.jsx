@@ -1,4 +1,4 @@
-import { User } from "lucide-react";
+import { User, Package, ShieldCheck } from "lucide-react";
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../../context/LanguageContext";
@@ -78,7 +78,7 @@ export default function UserMenu() {
                 <p className="text-xs text-gray-400 font-medium truncate">{user.email}</p>
                 <p className="text-sm font-bold text-brand-dark truncate">{user.name}</p>
               </div>
-              <button
+               <button
                 onClick={() => {
                   setDropdownOpen(false);
                   navigate('/profile');
@@ -87,6 +87,35 @@ export default function UserMenu() {
               >
                 {t('user_profile') || 'Profile'}
               </button>
+
+              {/* Conditional Seller Dashboard */}
+              {(user.role === 'seller' || user.role === 'admin') && (
+                <button
+                  onClick={() => {
+                    setDropdownOpen(false);
+                    navigate('/seller-dashboard');
+                  }}
+                  className="w-full text-left px-4 py-3 text-sm text-brand-dark hover:bg-brand-light hover:text-brand-magenta transition-colors flex items-center gap-2 border-t border-brand-gray/30"
+                >
+                  <Package className="w-4 h-4 text-brand-magenta" />
+                  Seller Dashboard
+                </button>
+              )}
+
+              {/* Conditional Admin Panel */}
+              {user.role === 'admin' && (
+                <button
+                  onClick={() => {
+                    setDropdownOpen(false);
+                    navigate('/admin');
+                  }}
+                  className="w-full text-left px-4 py-3 text-sm text-brand-dark hover:bg-brand-light hover:text-brand-magenta transition-colors flex items-center gap-2 border-t border-brand-gray/30"
+                >
+                  <ShieldCheck className="w-4 h-4 text-brand-yellow" />
+                  Admin Panel
+                </button>
+              )}
+
               <button
                 onClick={handleLogout}
                 className="block w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors border-t border-brand-gray/30"

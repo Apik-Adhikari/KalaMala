@@ -31,6 +31,9 @@ const userSchema = new mongoose.Schema({
 		type: Date,
 		default: Date.now
 	},
+	lastLogin: {
+		type: Date
+	},
 	// For future extensibility
 	role: {
 		type: String,

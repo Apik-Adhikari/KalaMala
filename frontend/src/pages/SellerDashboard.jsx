@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Edit, Trash, Package, AlertCircle, TrendingUp } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import SalesChart from '../components/views/SalesChart.jsx';
+import { getImageUrl } from '../utils/imageUtils';
 
 export default function SellerDashboard() {
     const navigate = useNavigate();
-    const { user, token } = useAuth();
+    const { user, token, loading: authLoading } = useAuth();
     const [products, setProducts] = useState([]);
     const [alerts, setAlerts] = useState([]);
     const [salesTrends, setSalesTrends] = useState([]);
@@ -14,12 +15,14 @@ export default function SellerDashboard() {
     const [error, setError] = useState('');
 
     useEffect(() => {
+        if (authLoading) return;
+
         if (!user) {
             navigate('/login');
             return;
         }
 
-        if (user.role !== 'seller') {
+        if (user.role !== 'seller' && user.role !== 'admin') {
             navigate('/become-seller');
             return;
         }
@@ -222,7 +225,7 @@ export default function SellerDashboard() {
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-4">
                                                     <img
-                                                        src={product.image}
+                                                        src={getImageUrl(product.image)}
                                                         alt={product.name}
                                                         className="w-12 h-12 rounded-lg object-cover bg-gray-100"
                                                         onError={(e) => e.target.src = 'https://via.placeholder.com/150'}

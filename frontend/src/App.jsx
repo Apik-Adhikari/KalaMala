@@ -16,6 +16,7 @@ import SellerDashboard from "./pages/SellerDashboard.jsx";
 import EditProduct from "./pages/EditProduct.jsx";
 import PaymentSuccess from "./pages/PaymentSuccess.jsx";
 import PaymentFailure from "./pages/PaymentFailure.jsx";
+import AdminDashboard from "./pages/AdminDashboard.jsx";
 
 import { LanguageProvider } from "./context/LanguageContext.jsx";
 import { AuthProvider } from "./context/AuthContext.jsx";
@@ -44,6 +45,7 @@ function App() {
                   <Route path="/edit-product/:id" element={<EditProduct />} />
                   <Route path="/payment-success" element={<PaymentSuccess />} />
                   <Route path="/payment-failure" element={<PaymentFailure />} />
+                  <Route path="/admin" element={<AdminDashboard />} />
                 </Routes>
               </main>
               <Footer />

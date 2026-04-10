@@ -76,6 +76,19 @@ async function seed() {
     await Product.deleteMany({});
     console.log('Cleared existing products.');
 
+    const User = require('./models/User');
+    let adminUser = await User.findOne({ role: 'admin' });
+    if (!adminUser) {
+        adminUser = await User.create({
+            username: 'Admin Seed',
+            email: 'admin@seed.com',
+            phone: '+9770000000000',
+            password: 'password123',
+            role: 'admin'
+        });
+        console.log('Created dummy admin user for seeding.');
+    }
+
     const allProducts = [];
 
     for (const [category, data] of Object.entries(categoryData)) {
@@ -87,6 +100,7 @@ async function seed() {
         const imageUrl = `https://images.unsplash.com/photo-${getUnsplashId(category, i)}?auto=format&fit=crop&w=600&h=450&q=80`;
 
         allProducts.push({
+          user: adminUser._id,
           name: `${category} Piece #${i}`,
           price,
           description,

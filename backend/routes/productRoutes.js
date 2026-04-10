@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const authMiddleware = require('../middleware/authMiddleware');
+const { authMiddleware } = require('../middleware/authMiddleware');
+const uploadImages = require('../middleware/uploadImages');
 
 // Import product controller functions (implement these in controllers/productController.js)
 const {
@@ -28,11 +29,11 @@ router.get('/', getProducts);
 // GET /api/products/:id - Get product by ID
 router.get('/:id', getProductById);
 
-// POST /api/products - Create a new product
-router.post('/', authMiddleware, createProduct);
+// POST /api/products - Create a new product (with up to 5 images)
+router.post('/', authMiddleware, uploadImages.array('images', 5), createProduct);
 
 // PUT /api/products/:id - Update a product
-router.put('/:id', authMiddleware, updateProduct);
+router.put('/:id', authMiddleware, uploadImages.array('images', 5), updateProduct);
 
 // DELETE /api/products/:id - Delete a product
 router.delete('/:id', authMiddleware, deleteProduct);

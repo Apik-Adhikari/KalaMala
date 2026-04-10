@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../../context/LanguageContext";
 import { useAuth } from "../../context/AuthContext";
 import { useSearch } from "../../context/SearchContext";
-import { staticProducts } from "../../data/products";
+import { getImageUrl } from "../../utils/imageUtils";
+
 import HighlightedText from "./HighlightedText.jsx";
 
 export default function ProductList() {
@@ -52,15 +53,8 @@ export default function ProductList() {
           console.error("Failed to fetch products from backend", err);
         }
 
-        let displayProducts;
-        if (activeCategory === 'all') {
-          const staticFeatured = staticProducts.filter(p => p.featured);
-          displayProducts = [...backendProducts, ...staticFeatured];
-        } else {
-          // Filter static products by category and combine with backend results
-          const staticFiltered = staticProducts.filter(p => p.category === activeCategory);
-          displayProducts = [...backendProducts, ...staticFiltered];
-        }
+
+        let displayProducts = backendProducts;
 
         // Apply client-side search filtering for static products (or if backend filtering is incomplete)
         if (searchQuery) {
@@ -172,7 +166,7 @@ export default function ProductList() {
                 onClick={() => navigate(`/products/${product.id || product._id}`)}
               >
                 <img
-                  src={product.image || 'https://via.placeholder.com/400x300'}
+                  src={getImageUrl(product.images && product.images.length > 0 ? product.images[0] : product.image)}
                   alt={product.name}
                   className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
                 />

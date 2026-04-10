@@ -1,9 +1,11 @@
 import { ShoppingCart } from "lucide-react";
 
-export default function CartIcon({ count = 0 }) {
+export default function CartIcon({ count = 0, onClick }) {
   return (
-    <div className="relative group cursor-pointer p-2 rounded-full hover:bg-brand-gray/50 transition-all duration-300">
-
+    <div 
+      onClick={onClick}
+      className="relative group cursor-pointer p-2 rounded-full hover:bg-brand-gray/50 transition-all duration-300"
+    >
       <ShoppingCart className="w-6 h-6 text-brand-dark group-hover:text-brand-magenta transition-colors" />
 
 

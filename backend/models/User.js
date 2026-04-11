@@ -43,7 +43,18 @@ const userSchema = new mongoose.Schema({
 	profileImage: {
 		type: String,
 		default: ''
-	}
+	},
+	address: {
+		street: { type: String, default: '' },
+		city: { type: String, default: '' },
+		province: { type: String, default: '' }
+	},
+	wishlist: [
+		{
+			type: mongoose.Schema.Types.ObjectId,
+			ref: 'Product'
+		}
+	]
 });
 
 // Hash password before saving

@@ -40,81 +40,12 @@ export default function CartPage() {
     persist(next);
   };
 
-  const handleCheckout = async () => {
+  const handleCheckout = () => {
     if (!user) {
       navigate('/login');
       return;
     }
-
-    const address = prompt("Enter Shipping Address:", "Kathmandu");
-    const city = prompt("Enter City:", "Kathmandu");
-    const province = prompt("Enter Province:", "Bagmati");
-    const phone = prompt("Enter Phone Number:", user.phone || "9800000000");
-
-    if (!address || !city || !province || !phone) {
-      alert("Please provide all shipping details");
-      return;
-    }
-
-    try {
-      const orderData = {
-        orderItems: items.map(it => ({
-          name: it.name,
-          qty: it.qty || 1,
-          image: it.image,
-          price: it.price,
-          product: it.id || it._id
-        })),
-        shippingAddress: { address, city, province, phone },
-        totalPrice: totalPrice,
-      };
-
-      console.log('Sending Order Data:', orderData);
-
-      const res = await fetch('http://localhost:5000/api/orders', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(orderData)
-      });
-
-      if (res.ok) {
-        const responseData = await res.json();
-        console.log('Backend Response:', responseData);
-
-        const { esewaData } = responseData;
-
-        if (!esewaData) {
-          throw new Error('eSewa data missing from backend response');
-        }
-
-        // Create a form dynamically and submit to eSewa
-        console.log('Redirecting to eSewa with data:', esewaData);
-        const form = document.createElement('form');
-        form.setAttribute('method', 'POST');
-        form.setAttribute('action', 'https://rc-epay.esewa.com.np/api/epay/main/v2/form');
-
-        for (const key in esewaData) {
-          const hiddenField = document.createElement('input');
-          hiddenField.setAttribute('type', 'hidden');
-          hiddenField.setAttribute('name', key);
-          hiddenField.setAttribute('value', esewaData[key]);
-          form.appendChild(hiddenField);
-        }
-
-        document.body.appendChild(form);
-        form.submit();
-      } else {
-        const error = await res.json();
-        console.error('Checkout failed:', error);
-        alert(error.message || 'Checkout failed');
-      }
-    } catch (err) {
-      console.error('Checkout Error:', err);
-      alert('An error occurred during checkout: ' + err.message);
-    }
+    navigate('/checkout');
   };
 
   if (!items || items.length === 0) {

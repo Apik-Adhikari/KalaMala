@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../../context/LanguageContext";
 import { useAuth } from "../../context/AuthContext";
+import { getImageUrl } from "../../utils/imageUtils";
 
 export default function UserMenu() {
   const { t } = useLanguage();
@@ -43,12 +44,21 @@ export default function UserMenu() {
       {/* User Icon */}
       <button
         onClick={() => setDropdownOpen((s) => !s)}
-        className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-brand-gray/50 transition-all duration-300 group overflow-hidden"
+        className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-brand-gray/50 transition-all duration-300 group overflow-hidden border border-brand-gray/30 shadow-sm"
         aria-label="User menu"
       >
         {user ? (
-          <div className="w-full h-full bg-brand-magenta text-white flex items-center justify-center font-bold text-lg uppercase">
-            {user.name ? user.name.charAt(0) : user.email.charAt(0)}
+          <div className="w-full h-full bg-brand-magenta text-white flex items-center justify-center font-bold text-lg uppercase overflow-hidden ring-2 ring-white/20">
+            {user.profileImage ? (
+               <img 
+                 key={user.profileImage}
+                 src={`${getImageUrl(user.profileImage)}?t=${new Date().getTime()}`} 
+                 alt="Avatar" 
+                 className="w-full h-full object-cover" 
+               />
+            ) : (
+                user.name ? user.name.charAt(0) : user.username ? user.username.charAt(0) : user.email?.charAt(0)
+            )}
           </div>
         ) : (
           <User className="w-6 h-6 text-brand-dark group-hover:text-brand-magenta transition-colors" />

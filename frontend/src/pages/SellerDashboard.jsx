@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit, Trash, Package, AlertCircle, TrendingUp } from 'lucide-react';
+import { Plus, Edit, Trash, Package, AlertCircle, TrendingUp, BarChart as BarChartIcon, DollarSign, Bell, CheckCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import SalesChart from '../components/views/SalesChart.jsx';
+import { LineChart } from '../components/views/ChartDashboard.jsx';
 import { getImageUrl } from '../utils/imageUtils';
 
 export default function SellerDashboard() {
@@ -11,6 +11,8 @@ export default function SellerDashboard() {
     const [products, setProducts] = useState([]);
     const [alerts, setAlerts] = useState([]);
     const [salesTrends, setSalesTrends] = useState([]);
+    const [notifications, setNotifications] = useState([]);
+    const [stats, setStats] = useState({ totalRevenue: 0, totalSalesCount: 0 });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
@@ -32,7 +34,9 @@ export default function SellerDashboard() {
             await Promise.all([
                 fetchMyProducts(user._id),
                 fetchAlerts(),
-                fetchSalesTrends()
+                fetchSalesTrends(),
+                fetchNotifications(),
+                fetchStats()
             ]);
             setLoading(false);
         };
@@ -75,6 +79,42 @@ export default function SellerDashboard() {
             if (res.ok) setSalesTrends(data);
         } catch (err) {
             console.error('Error fetching sales trends:', err);
+        }
+    };
+
+    const fetchNotifications = async () => {
+        try {
+            const res = await fetch(`http://localhost:5000/api/users/notifications`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (res.ok) setNotifications(data);
+        } catch (err) {
+            console.error('Error fetching notifications:', err);
+        }
+    };
+
+    const markAsRead = async (id) => {
+        try {
+            await fetch(`http://localhost:5000/api/users/notifications/${id}`, {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            setNotifications(notifications.map(n => n._id === id ? { ...n, isRead: true } : n));
+        } catch (err) {
+            console.error('Error marking notification as read');
+        }
+    };
+
+    const fetchStats = async () => {
+        try {
+            const res = await fetch(`http://localhost:5000/api/orders/seller/stats`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (res.ok) setStats(data);
+        } catch (err) {
+            console.error('Error fetching seller stats:', err);
         }
     };
 
@@ -140,8 +180,20 @@ export default function SellerDashboard() {
                                 <TrendingUp className="w-6 h-6" />
                             </div>
                             <div>
-                                <p className="text-sm text-gray-500 font-medium">Active Alerts</p>
-                                <h3 className="text-2xl font-bold text-gray-900">{alerts.length}</h3>
+                                <p className="text-sm text-gray-500 font-medium">Items Sold</p>
+                                <h3 className="text-2xl font-bold text-gray-900">{stats.totalSalesCount}</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                        <div className="flex items-center gap-4">
+                            <div className="p-3 bg-brand-light/30 text-brand-magenta rounded-xl">
+                                <DollarSign className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-500 font-medium">Total Revenue</p>
+                                <h3 className="text-2xl font-bold text-gray-900">Rs. {stats.totalRevenue.toLocaleString()}</h3>
                             </div>
                         </div>
                     </div>
@@ -149,8 +201,25 @@ export default function SellerDashboard() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
                     {/* Sales Analytics */}
-                    <div className="lg:col-span-2">
-                        <SalesChart data={salesTrends} />
+                    <div className="lg:col-span-2 bg-white p-8 rounded-3xl shadow-sm border border-gray-100 min-h-[450px]">
+                        <div className="flex justify-between items-center mb-8">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-brand-light rounded-xl">
+                                    <BarChartIcon className="text-brand-magenta w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-gray-900">Revenue Stream</h3>
+                                    <p className="text-xs text-gray-400 font-medium">Daily revenue trends (NPR)</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2 px-4 py-2 bg-green-50 rounded-xl">
+                                <DollarSign className="w-4 h-4 text-green-600" />
+                                <span className="text-xs font-bold text-green-700">Growth: +12%</span>
+                            </div>
+                        </div>
+                        <div className="h-[320px]">
+                            <LineChart data={salesTrends} label="Revenue (NPR)" />
+                        </div>
                     </div>
 
                     {/* Inventory Alerts */}
@@ -176,6 +245,45 @@ export default function SellerDashboard() {
                                         >
                                             Restock
                                         </button>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Notifications */}
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2">
+                                <Bell className="w-5 h-5 text-brand-magenta" />
+                                <h2 className="text-xl font-bold text-gray-900">Notifications</h2>
+                            </div>
+                            {notifications.filter(n => !n.isRead).length > 0 && (
+                                <span className="bg-brand-magenta text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                    {notifications.filter(n => !n.isRead).length} NEW
+                                </span>
+                            )}
+                        </div>
+
+                        <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2">
+                            {notifications.length === 0 ? (
+                                <p className="text-gray-500 text-sm italic">No new activity.</p>
+                            ) : (
+                                notifications.map(note => (
+                                    <div key={note._id} className={`p-4 rounded-2xl transition-all ${note.isRead ? 'bg-gray-50 text-gray-500' : 'bg-brand-light/20 border border-brand-light'}`}>
+                                        <div className="flex justify-between items-start mb-1">
+                                            <h4 className={`text-sm font-bold ${note.type === 'removal' ? 'text-red-600' : 'text-gray-900'}`}>{note.title}</h4>
+                                            {!note.isRead && (
+                                                <button onClick={() => markAsRead(note._id)} className="text-brand-magenta hover:text-pink-700">
+                                                    <CheckCircle size={14} />
+                                                </button>
+                                            )}
+                                        </div>
+                                        <p className="text-xs leading-relaxed mb-2">{note.message}</p>
+                                        {note.relatedProduct && (
+                                           <div className="text-[10px] font-bold opacity-60 uppercase tracking-widest">Product: {note.relatedProduct}</div>
+                                        )}
+                                        <div className="text-[10px] text-gray-400 mt-1">{new Date(note.createdAt).toLocaleDateString()}</div>
                                     </div>
                                 ))
                             )}

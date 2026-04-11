@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const Notification = require('../models/Notification');
 
 const generateToken = require('../utils/generateToken');
 
@@ -80,7 +81,7 @@ exports.getUserProfile = async (req, res) => {
 	try {
 		const userId = req.user?.id;
 		if (!userId) return res.status(401).json({ message: 'Not authorized' });
-		const user = await User.findById(userId).select('-password');
+		const user = await User.findById(userId).select('-password').populate('wishlist');
 		if (user) {
 			res.json(user);
 		} else {
@@ -120,6 +121,13 @@ exports.updateUserProfile = async (req, res) => {
 		user.username = req.body.username || user.username;
 		user.email = req.body.email || user.email;
 		user.phone = req.body.phone || user.phone;
+		if (req.body.address) {
+			user.address = {
+				street: req.body.address.street || user.address.street,
+				city: req.body.address.city || user.address.city,
+				province: req.body.address.province || user.address.province,
+			};
+		}
 		if (req.body.password) user.password = req.body.password;
 
 		const updatedUser = await user.save();
@@ -135,4 +143,76 @@ exports.updateUserProfile = async (req, res) => {
 	}
 };
 
+// @desc    Toggle wishlist item
+// @route   POST /api/users/wishlist/:id
+// @access  Private
+exports.toggleWishlist = async (req, res) => {
+	try {
+		const user = await User.findById(req.user.id);
+		const productId = req.params.id;
 
+		const index = user.wishlist.indexOf(productId);
+		if (index > -1) {
+			user.wishlist.splice(index, 1);
+			await user.save();
+			res.json({ message: 'Removed from wishlist', wishlist: user.wishlist });
+		} else {
+			user.wishlist.push(productId);
+			await user.save();
+			res.json({ message: 'Added to wishlist', wishlist: user.wishlist });
+		}
+	} catch (error) {
+		res.status(500).json({ message: error.message });
+	}
+};
+
+// @desc    Upload profile image
+// @route   PUT /api/users/profile/image
+// @access  Private
+exports.uploadProfileImage = async (req, res) => {
+	try {
+		const user = await User.findById(req.user.id);
+		if (req.file) {
+			user.profileImage = req.file.path;
+			await user.save();
+			res.json({ message: 'Profile image updated', profileImage: user.profileImage });
+		} else {
+			res.status(400).json({ message: 'No image uploaded' });
+		}
+	} catch (error) {
+		res.status(500).json({ message: error.message });
+	}
+};
+
+
+
+
+// @desc    Get user notifications
+// @route   GET /api/users/notifications
+// @access  Private
+exports.getNotifications = async (req, res) => {
+	try {
+		const notifications = await Notification.find({ user: req.user.id }).sort({ createdAt: -1 });
+		res.json(notifications);
+	} catch (error) {
+		res.status(500).json({ message: error.message });
+	}
+};
+
+// @desc    Mark notification as read
+// @route   PUT /api/users/notifications/:id
+// @access  Private
+exports.markNotificationAsRead = async (req, res) => {
+	try {
+		const notification = await Notification.findById(req.params.id);
+		if (notification) {
+			notification.isRead = true;
+			await notification.save();
+			res.json({ message: 'Notification marked as read' });
+		} else {
+			res.status(404).json({ message: 'Notification not found' });
+		}
+	} catch (error) {
+		res.status(500).json({ message: error.message });
+	}
+};

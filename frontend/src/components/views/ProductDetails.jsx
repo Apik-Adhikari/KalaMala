@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../../context/LanguageContext";
 import { useAuth } from "../../context/AuthContext";
 import { getImageUrl } from "../../utils/imageUtils";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Heart } from "lucide-react";
 
 export default function ProductDetails({ product }) {
   const navigate = useNavigate();
@@ -71,7 +71,6 @@ export default function ProductDetails({ product }) {
       }
       localStorage.setItem("cart", JSON.stringify(next));
       window.dispatchEvent(new CustomEvent('cart-updated'));
-      navigate('/cart');
     } catch (e) {
       console.error('Failed to add to cart', e);
     }
@@ -135,6 +134,26 @@ export default function ProductDetails({ product }) {
                   ))}
                 </div>
                 <span className="text-brand-magenta font-bold text-2xl">Rs. {product.price}</span>
+                <button 
+                  onClick={async () => {
+                    if(!user) { navigate('/login'); return; }
+                    try {
+                      const res = await fetch(`http://localhost:5000/api/users/wishlist/${product._id || product.id}`, {
+                        method: 'POST',
+                        headers: { Authorization: `Bearer ${token}` }
+                      });
+                      if(res.ok) {
+                        const data = await res.json();
+                        alert(data.message);
+                      }
+                    } catch (err) {
+                      alert('Error updating wishlist');
+                    }
+                  }}
+                  className="p-2 rounded-full hover:bg-pink-50 text-brand-magenta transition-colors shadow-sm border border-brand-gray/30"
+                >
+                  <Heart className="w-6 h-6" />
+                </button>
               </div>
             </div>
 

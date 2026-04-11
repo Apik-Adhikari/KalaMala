@@ -5,6 +5,7 @@ import UserMenu from "./UserMenu.jsx";
 import CartIcon from "./CartIcon.jsx";
 import CartBoard from "./CartBoard.jsx";
 import LanguageSwitcher from "./LanguageSwitcher.jsx";
+import NotificationBell from "./NotificationBell.jsx";
 import { useAuth } from "../../context/AuthContext";
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
@@ -89,6 +90,7 @@ export default function Header() {
           ) : null}
           <LanguageSwitcher />
           <CartIcon count={count} onClick={() => navigate('/cart')} />
+          <NotificationBell />
           <UserMenu />
         </div>
       </div>

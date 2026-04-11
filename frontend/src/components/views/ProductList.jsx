@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../../context/LanguageContext";
 import { useAuth } from "../../context/AuthContext";
 import { useSearch } from "../../context/SearchContext";
+import { Heart } from "lucide-react";
 import { getImageUrl } from "../../utils/imageUtils";
 
 import HighlightedText from "./HighlightedText.jsx";
@@ -10,7 +11,7 @@ import HighlightedText from "./HighlightedText.jsx";
 export default function ProductList() {
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const { searchQuery } = useSearch();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -98,7 +99,6 @@ export default function ProductList() {
       }
       localStorage.setItem("cart", JSON.stringify(next));
       window.dispatchEvent(new CustomEvent('cart-updated'));
-      navigate('/cart');
     } catch (e) {
       console.error('Failed to add to cart', e);
     }
@@ -176,6 +176,27 @@ export default function ProductList() {
                     {product.category}
                   </span>
                 )}
+                <button 
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    if(!user) { navigate('/login'); return; }
+                    try {
+                      const res = await fetch(`http://localhost:5000/api/users/wishlist/${product.id || product._id}`, {
+                        method: 'POST',
+                        headers: { Authorization: `Bearer ${token}` }
+                      });
+                      if(res.ok) {
+                        const data = await res.json();
+                        alert(data.message);
+                      }
+                    } catch (err) {
+                      alert('Error updating wishlist');
+                    }
+                  }}
+                  className="absolute top-3 right-3 w-8 h-8 bg-white/90 backdrop-blur-sm text-brand-magenta rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all scale-90 group-hover:scale-100 shadow-sm border border-brand-gray/20 hover:scale-110 active:scale-95"
+                >
+                  <Heart className="w-4 h-4" />
+                </button>
               </div>
 
               <div className="p-5 pt-3 flex flex-col flex-grow">

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Users, Package, ShoppingBag, TrendingUp, ShieldCheck, AlertCircle, ShoppingCart, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Users, Package, ShoppingBag, TrendingUp, ShieldCheck, AlertCircle, ShoppingCart, CheckCircle, XCircle, Clock, Calendar, Layout, Trash2, Send } from 'lucide-react';
+import { LineChart, BarChart, CategoryDoughnut } from '../components/views/ChartDashboard.jsx';
 
 export default function AdminDashboard() {
     const { token, user, loading: authLoading } = useAuth();
@@ -13,6 +14,8 @@ export default function AdminDashboard() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [activeTab, setActiveTab] = useState('overview');
+    const [removingProduct, setRemovingProduct] = useState(null);
+    const [removalReason, setRemovalReason] = useState('');
 
     useEffect(() => {
         if (authLoading) return;
@@ -57,6 +60,55 @@ export default function AdminDashboard() {
 
         fetchData();
     }, [token, user, navigate]);
+
+    const handleRoleChange = async (userId, newRole) => {
+        try {
+            const res = await fetch(`http://localhost:5000/api/admin/users/${userId}/role`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ role: newRole })
+            });
+
+            if (res.ok) {
+                setUsers(users.map(u => u._id === userId ? { ...u, role: newRole } : u));
+                alert('User role updated successfully!');
+            } else {
+                const data = await res.json();
+                alert(data.message || 'Failed to update role');
+            }
+        } catch (err) {
+            alert('Error updating user role');
+        }
+    };
+
+    const handleRemoveProduct = async () => {
+        if (!removingProduct) return;
+        try {
+            const res = await fetch(`http://localhost:5000/api/admin/products/${removingProduct._id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ reason: removalReason })
+            });
+
+            if (res.ok) {
+                setProducts(products.filter(p => p._id !== removingProduct._id));
+                setRemovingProduct(null);
+                setRemovalReason('');
+                alert('Product removed and seller notified.');
+            } else {
+                const data = await res.json();
+                alert(data.message || 'Failed to remove product');
+            }
+        } catch (err) {
+            alert('Error removing product');
+        }
+    };
 
     if (loading) return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -132,6 +184,38 @@ export default function AdminDashboard() {
                             ))}
                         </div>
 
+                        {/* Charts Section */}
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            <div className="lg:col-span-2 bg-white p-6 rounded-3xl shadow-sm border border-gray-100 min-h-[400px]">
+                                <div className="flex justify-between items-center mb-6">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 bg-brand-light rounded-xl">
+                                            <Calendar className="text-brand-magenta w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-gray-900">User Registrations</h3>
+                                            <p className="text-xs text-gray-400 font-medium">Daily signup trends (Last 7 Days)</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="h-[300px]">
+                                    <LineChart data={stats.stats.dailyRegs || []} label="New Users" />
+                                </div>
+                            </div>
+
+                            <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 min-h-[400px]">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="p-2 bg-brand-light rounded-xl">
+                                        <Layout className="text-brand-magenta w-5 h-5" />
+                                    </div>
+                                    <h3 className="font-bold text-gray-900">Stock by Category</h3>
+                                </div>
+                                <div className="h-[300px]">
+                                    <CategoryDoughnut data={stats.stats.categoryDistribution || []} />
+                                </div>
+                            </div>
+                        </div>
+
                         {/* Recent Orders Overview */}
                         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                             <div className="p-6 border-b border-gray-100">
@@ -193,9 +277,15 @@ export default function AdminDashboard() {
                                             <td className="px-6 py-4 text-sm font-bold text-gray-900">{u.username}</td>
                                             <td className="px-6 py-4 text-sm text-gray-600">{u.email}</td>
                                             <td className="px-6 py-4 text-sm">
-                                                <span className={`px-2 py-1 rounded-md text-[10px] font-black uppercase tracking-widest ${u.role === 'admin' ? 'bg-red-100 text-red-600' : u.role === 'seller' ? 'bg-orange-100 text-orange-600' : 'bg-blue-100 text-blue-600'}`}>
-                                                    {u.role}
-                                                </span>
+                                                <select
+                                                    value={u.role}
+                                                    onChange={(e) => handleRoleChange(u._id, e.target.value)}
+                                                    className={`px-2 py-1 rounded-md text-[10px] font-black uppercase tracking-widest cursor-pointer outline-none focus:ring-2 focus:ring-brand-magenta transition-all ${u.role === 'admin' ? 'bg-red-100 text-red-600' : u.role === 'seller' ? 'bg-orange-100 text-orange-600' : 'bg-blue-100 text-blue-600'}`}
+                                                >
+                                                    <option value="user">User</option>
+                                                    <option value="seller">Seller</option>
+                                                    <option value="admin">Admin</option>
+                                                </select>
                                             </td>
                                             <td className="px-6 py-4 text-sm text-gray-400">{new Date(u.createdAt).toLocaleDateString()}</td>
                                         </tr>
@@ -228,6 +318,15 @@ export default function AdminDashboard() {
                                                 <span className={`font-bold ${p.countInStock > 0 ? 'text-green-600' : 'text-red-600'}`}>
                                                     {p.countInStock}
                                                 </span>
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                <button 
+                                                    onClick={() => setRemovingProduct(p)}
+                                                    className="p-2 hover:bg-red-50 text-red-400 hover:text-red-600 rounded-lg transition-colors"
+                                                    title="Remove Product"
+                                                >
+                                                    <Trash2 size={18} />
+                                                </button>
                                             </td>
                                         </tr>
                                     ))}
@@ -313,6 +412,53 @@ export default function AdminDashboard() {
                                     ))}
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+                )}
+
+                {/* Removal Modal */}
+                {removingProduct && (
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                        <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+                            <div className="p-8">
+                                <div className="w-16 h-16 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center mb-6">
+                                    <AlertCircle size={32} />
+                                </div>
+                                <h3 className="text-2xl font-bold text-gray-900 mb-2">Remove Product?</h3>
+                                <p className="text-gray-500 text-sm mb-6">
+                                    You are about to remove <span className="font-bold text-gray-900">"{removingProduct.name}"</span>. 
+                                    Please provide a reason so we can notify the seller.
+                                </p>
+                                
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Reason for Removal</label>
+                                        <textarea 
+                                            value={removalReason}
+                                            onChange={(e) => setRemovalReason(e.target.value)}
+                                            placeholder="e.g., Copyright violation, Inappropriate content, Counterfeit item..."
+                                            className="w-full bg-gray-50 border-none rounded-2xl p-4 text-sm focus:ring-2 focus:ring-red-500 h-32 resize-none"
+                                        />
+                                    </div>
+                                    
+                                    <div className="flex gap-3 pt-2">
+                                        <button 
+                                            onClick={() => setRemovingProduct(null)}
+                                            className="flex-1 px-6 py-3 rounded-2xl font-bold text-gray-500 hover:bg-gray-100 transition-colors"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button 
+                                            onClick={handleRemoveProduct}
+                                            disabled={!removalReason.trim()}
+                                            className="flex-1 bg-red-600 text-white px-6 py-3 rounded-2xl font-bold hover:bg-red-700 transition-all shadow-lg shadow-red-200 disabled:opacity-50 disabled:shadow-none flex items-center justify-center gap-2"
+                                        >
+                                            <Trash2 size={18} />
+                                            Remove
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 )}

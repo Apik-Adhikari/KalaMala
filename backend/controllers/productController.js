@@ -354,3 +354,74 @@ exports.getInventoryAlerts = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+// @desc    Get personalized product recommendations for a user (User-based Collaborative Filtering)
+// @route   GET /api/products/user/recommendations
+// @access  Private
+exports.getUserRecommendations = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // 1. Get all products the current user has bought or rated positively
+    const userOrders = await Order.find({ user: userId, isPaid: true }).select('orderItems');
+    const userPurchasedProductIds = new Set();
+    userOrders.forEach(order => {
+      order.orderItems.forEach(item => {
+        userPurchasedProductIds.add(item.product.toString());
+      });
+    });
+
+    if (userPurchasedProductIds.size === 0) {
+      // Fallback: return featured products or highly rated products if no history
+      const fallback = await Product.find({ featured: true }).limit(5);
+      return res.json(fallback);
+    }
+
+    // 2. Find other users who bought the same products
+    const similarUsersOrders = await Order.find({
+      'orderItems.product': { $in: Array.from(userPurchasedProductIds) },
+      user: { $ne: userId },
+      isPaid: true
+    }).select('user orderItems');
+
+    const similarUsers = new Set();
+    similarUsersOrders.forEach(order => {
+      similarUsers.add(order.user.toString());
+    });
+
+    // 3. Find other products bought by these similar users
+    const allOrdersFromSimilarUsers = await Order.find({
+      user: { $in: Array.from(similarUsers) },
+      isPaid: true
+    }).select('orderItems');
+
+    const productScores = {};
+    allOrdersFromSimilarUsers.forEach(order => {
+      order.orderItems.forEach(item => {
+        const productId = item.product.toString();
+        // Only recommend products the current user hasn't bought yet
+        if (!userPurchasedProductIds.has(productId)) {
+          productScores[productId] = (productScores[productId] || 0) + 1;
+        }
+      });
+    });
+
+    // 4. Sort products by score (frequency among similar users)
+    const sortedProductIds = Object.keys(productScores)
+      .sort((a, b) => productScores[b] - productScores[a])
+      .slice(0, 8); // Top 8 recommendations
+
+    if (sortedProductIds.length === 0) {
+       const fallback = await Product.find({ _id: { $nin: Array.from(userPurchasedProductIds) }, rating: { $gte: 4 } }).limit(5);
+       return res.json(fallback);
+    }
+
+    const recommendedProducts = await Product.find({
+      _id: { $in: sortedProductIds }
+    });
+
+    res.json(recommendedProducts);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};

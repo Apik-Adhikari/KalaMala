@@ -14,11 +14,15 @@ const {
 	updateProductReview,
 	deleteProductReview,
 	getRecommendedProducts,
-	getInventoryAlerts
+	getInventoryAlerts,
+	getUserRecommendations
 } = require('../controllers/productController');
 
 // GET /api/products/alerts - Get inventory alerts
 router.get('/alerts', authMiddleware, getInventoryAlerts);
+
+// GET /api/products/user/recommendations - Get personalized user recommendations
+router.get('/user/recommendations', authMiddleware, getUserRecommendations);
 
 // GET /api/products/:id/recommendations - Get product recommendations
 router.get('/:id/recommendations', getRecommendedProducts);

@@ -2,31 +2,23 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../../../context/LanguageContext";
 import { useAuth } from "../../../context/AuthContext";
-
-// Simple flash message component
-function FlashMessage({ message, onClose }) {
-  if (!message) return null;
-  return (
-    <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-4 py-2 rounded shadow-lg z-50">
-      {message}
-      <button onClick={onClose} className="ml-4 font-bold">×</button>
-    </div>
-  );
-}
+import { GoogleLogin } from '@react-oauth/google';
 
 export default function RegisterModal({ onClose, onSwitch }) {
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const { register } = useAuth();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
-    username: "",
+    fullName: "",
     email: "",
     phone: "+977", // default Nepali code
     password: "",
     confirmPassword: "",
   });
   const [flash, setFlash] = useState("");
+  const [flashType, setFlashType] = useState("success");
   const [loading, setLoading] = useState(false);
+  const [isRegistered, setIsRegistered] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -40,14 +32,16 @@ export default function RegisterModal({ onClose, onSwitch }) {
 
     // Basic validation
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match!");
+      setFlash("Passwords do not match!");
+      setFlashType("error");
       return;
     }
 
     // Validate Nepali number (starts with +977 and 10 digits after)
     const nepaliNumberRegex = /^\+977[0-9]{10}$/;
     if (!nepaliNumberRegex.test(trimmedPhone)) {
-      alert("Please enter a valid Nepali number (e.g. +9779812345678)");
+      setFlash("Please enter a valid Nepali number (e.g. +9779812345678)");
+      setFlashType("error");
       return;
     }
 
@@ -55,6 +49,7 @@ export default function RegisterModal({ onClose, onSwitch }) {
     const registerData = { ...formData, phone: trimmedPhone };
 
     setLoading(true);
+    setFlash("");
     try {
       const res = await fetch("http://localhost:5000/api/users/register", {
         method: "POST",
@@ -62,46 +57,90 @@ export default function RegisterModal({ onClose, onSwitch }) {
         body: JSON.stringify(registerData),
       });
       const data = await res.json();
-      if (res.ok) {
-        setFlash("User registered successfully!");
-        setFormData({ username: "", email: "", phone: "+977", password: "", confirmPassword: "" });
-        // Save token and user info to context
-        if (data.token) {
-          register({ _id: data._id, name: data.username, email: data.email, role: data.role }, data.token);
-        }
-        setTimeout(() => {
-          setFlash("");
-          if (onClose && typeof onClose === 'function') onClose();
-          navigate("/");
-        }, 800);
+      if (res.status === 201) {
+        // Redirect to code entry page
+        navigate(`/verify-code?email=${encodeURIComponent(data.email || formData.email)}`);
+        onClose && onClose();
       } else {
         setFlash(data.message || "Registration failed");
+        setFlashType("error");
       }
     } catch (err) {
       setFlash("Registration failed. Please try again.");
+      setFlashType("error");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleGoogleSignup = () => {
-    // 🔗 Replace this with Google OAuth logic
-    alert("Google signup clicked!");
+  const handleGoogleSuccess = async (response) => {
+    try {
+      const res = await fetch("http://localhost:5000/api/users/google", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: response.credential }),
+      });
+      const data = await res.json();
+      if (res.status === 201) {
+        // New user — redirect to code entry page
+        navigate(`/verify-code?email=${encodeURIComponent(data.email)}`);
+        onClose && onClose();
+      } else if (res.ok) {
+        login({ _id: data._id, name: data.fullName, email: data.email, role: data.role }, data.token);
+        onClose && onClose();
+        navigate("/");
+      } else {
+        setFlash(data.message || "Google login failed");
+        setFlashType("error");
+      }
+    } catch (err) {
+      setFlash("Google login failed");
+      setFlashType("error");
+    }
   };
+
+  if (isRegistered) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-50">
+        <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-brand-gray/20 text-center">
+          <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold mb-4">Registration Successful!</h2>
+          <p className="text-gray-600 mb-6">
+            We've sent a verification link to your email. Please verify your account to sign in.
+          </p>
+          <button
+            onClick={() => onSwitch ? onSwitch() : navigate('/login')}
+            className="bg-brand-magenta text-white px-6 py-2 rounded-xl font-bold hover:bg-pink-700 transition-all"
+          >
+            Go to Login
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
-      <FlashMessage message={flash} onClose={() => setFlash("")} />
       <div className="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-50">
         <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-brand-gray/20 max-h-[90vh] overflow-y-auto">
           <h2 className="text-3xl font-serif font-bold mb-6 text-center text-brand-dark">{t('auth_register_title')}</h2>
+          
+          {flash && (
+            <div className={`mb-6 p-4 rounded-xl text-center font-medium ${flashType === "success" ? "bg-green-50 text-green-700 border border-green-200" : "bg-red-50 text-red-600 border border-red-200"}`}>
+              {flash}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <input
               type="text"
-              name="username"
-              placeholder={t('auth_username')}
-              value={formData.username}
+              name="fullName"
+              placeholder="Full Name"
+              value={formData.fullName}
               onChange={handleChange}
               required
               className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-magenta/20 focus:border-brand-magenta transition-all"
@@ -156,14 +195,22 @@ export default function RegisterModal({ onClose, onSwitch }) {
             </button>
           </form>
 
-          {/* Google Signup */}
-          <button
-            onClick={handleGoogleSignup}
-            className="mt-4 w-full py-3 border border-gray-300 rounded-xl hover:bg-gray-50 flex items-center justify-center gap-3 transition-colors font-medium text-brand-dark"
-          >
-            <img src="/google-logo.svg" alt="Google logo" className="w-5 h-5" />
-            {t('auth_google')}
-          </button>
+          <div className="mt-4 flex flex-col items-center">
+            <p className="text-gray-500 text-sm mb-3">Or signup with</p>
+            <div className="w-full flex justify-center">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => {
+                  setFlash("Google Signup Failed");
+                  setFlashType("error");
+                }}
+                useOneTap
+                theme="outline"
+                shape="pill"
+                width="100%"
+              />
+            </div>
+          </div>
 
           <p className="mt-8 text-sm text-center text-gray-500">
             {t('auth_have_account')}{" "}
@@ -192,4 +239,4 @@ export default function RegisterModal({ onClose, onSwitch }) {
       </div>
     </>
   );
-}
+}

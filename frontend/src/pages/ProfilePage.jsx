@@ -15,7 +15,8 @@ import {
   ChevronRight,
   LogOut,
   ShieldCheck,
-  CreditCard
+  CreditCard,
+  Store
 } from "lucide-react";
 
 export default function ProfilePage() {
@@ -234,6 +235,57 @@ export default function ProfilePage() {
                   Your account is protected with 2FA and secure encryption. Your data privacy is our priority.
                </p>
             </div>
+
+            {/* Want to Sell Card – handling pending/rejected/none statuses */}
+            {profile?.role === 'user' && (
+              <div className="bg-gradient-to-br from-brand-magenta to-pink-700 rounded-3xl p-6 text-white shadow-xl">
+                {profile?.sellerStatus === 'pending' ? (
+                  <>
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center animate-pulse">
+                        <Store className="w-4 h-4" />
+                      </div>
+                      <span className="font-bold text-lg">Pending Approval</span>
+                    </div>
+                    <p className="text-xs text-white/80 leading-relaxed">
+                      Your seller request is being reviewed by our admins. You'll be notified once you're approved to start selling!
+                    </p>
+                  </>
+                ) : profile?.sellerStatus === 'rejected' ? (
+                  <>
+                    <div className="flex items-center gap-3 mb-3">
+                      <Store className="w-6 h-6 text-red-200" />
+                      <span className="font-bold text-lg">Application Rejected</span>
+                    </div>
+                    <p className="text-xs text-white/80 leading-relaxed mb-4">
+                      Sorry, your recent seller application was not approved. You can try updating your details and applying again.
+                    </p>
+                    <button
+                      onClick={() => navigate('/become-seller')}
+                      className="w-full py-2.5 bg-white/20 text-white border border-white/50 font-bold rounded-2xl hover:bg-white/30 transition-all text-sm shadow-lg"
+                    >
+                      Re-apply Now
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-3 mb-3">
+                      <Store className="w-6 h-6" />
+                      <span className="font-bold text-lg">Want to Sell?</span>
+                    </div>
+                    <p className="text-xs text-white/80 leading-relaxed mb-4">
+                      Join hundreds of artists on KalaMala. Start your seller journey today and reach thousands of art lovers.
+                    </p>
+                    <button
+                      onClick={() => navigate('/become-seller')}
+                      className="w-full py-2.5 bg-white text-brand-magenta font-bold rounded-2xl hover:bg-brand-light transition-all text-sm shadow-lg"
+                    >
+                      Become a Seller →
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Main Content */}

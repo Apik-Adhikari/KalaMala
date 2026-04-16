@@ -80,14 +80,6 @@ export default function Header() {
         <SearchBar />
         <NavMenu />
         <div className="flex items-center gap-4 relative" ref={cartRef}>
-          {user && user.role !== 'seller' && user.role !== 'admin' ? (
-            <button
-              onClick={() => navigate('/become-seller')}
-              className="hidden md:block px-4 py-2 rounded-full border border-brand-magenta text-brand-magenta font-medium hover:bg-brand-magenta hover:text-white transition-all text-sm"
-            >
-              Want to sell?
-            </button>
-          ) : null}
           <LanguageSwitcher />
           <CartIcon count={count} onClick={() => navigate('/cart')} />
           <NotificationBell />

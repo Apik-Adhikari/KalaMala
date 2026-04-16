@@ -12,7 +12,7 @@ const storage = multer.diskStorage({
   }
 });
 
-// File filter for images only and max size 500KB
+// File filter for images only
 const fileFilter = (req, file, cb) => {
   if (!file.mimetype.startsWith('image/')) {
     return cb(new Error('Only image files are allowed!'), false);

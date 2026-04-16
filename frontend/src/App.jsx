@@ -19,6 +19,9 @@ import PaymentFailure from "./pages/PaymentFailure.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
 import CheckoutPage from "./pages/CheckoutPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
+import VerifyEmail from "./pages/VerifyEmail.jsx";
+import VerifyCode from "./pages/VerifyCode.jsx";
+import ResetPassword from "./pages/ResetPassword.jsx";
 
 import { LanguageProvider } from "./context/LanguageContext.jsx";
 import { AuthProvider } from "./context/AuthContext.jsx";
@@ -50,6 +53,9 @@ function App() {
                   <Route path="/admin" element={<AdminDashboard />} />
                   <Route path="/checkout" element={<CheckoutPage />} />
                   <Route path="/profile" element={<ProfilePage />} />
+                  <Route path="/verify-email" element={<VerifyEmail />} />
+                  <Route path="/verify-code" element={<VerifyCode />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
                 </Routes>
               </main>
               <Footer />

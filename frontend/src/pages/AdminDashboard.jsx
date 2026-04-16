@@ -16,6 +16,8 @@ export default function AdminDashboard() {
     const [activeTab, setActiveTab] = useState('overview');
     const [removingProduct, setRemovingProduct] = useState(null);
     const [removalReason, setRemovalReason] = useState('');
+    const [sellerRequests, setSellerRequests] = useState([]);
+    const [verifyingSellerId, setVerifyingSellerId] = useState(null);
 
     useEffect(() => {
         if (authLoading) return;
@@ -28,11 +30,12 @@ export default function AdminDashboard() {
         const fetchData = async () => {
             try {
                 const API_BASE = `http://${window.location.hostname}:5000/api/admin`;
-                const [statsRes, usersRes, productsRes, ordersRes] = await Promise.all([
+                const [statsRes, usersRes, productsRes, ordersRes, requestsRes] = await Promise.all([
                     fetch(`${API_BASE}/stats`, { headers: { 'Authorization': `Bearer ${token}` } }),
                     fetch(`${API_BASE}/users`, { headers: { 'Authorization': `Bearer ${token}` } }),
                     fetch(`${API_BASE}/products`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                    fetch(`${API_BASE}/orders`, { headers: { 'Authorization': `Bearer ${token}` } })
+                    fetch(`${API_BASE}/orders`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                    fetch(`http://localhost:5000/api/sellers/requests`, { headers: { 'Authorization': `Bearer ${token}` } })
                 ]);
 
                 if (!statsRes.ok) throw new Error(`Stats: ${statsRes.statusText}`);
@@ -44,11 +47,13 @@ export default function AdminDashboard() {
                 const usersData = await usersRes.json();
                 const productsData = await productsRes.json();
                 const ordersData = await ordersRes.json();
+                const requestsData = requestsRes.ok ? await requestsRes.json() : [];
 
                 setStats(statsData);
                 setUsers(usersData);
                 setProducts(productsData);
                 setOrders(ordersData);
+                setSellerRequests(requestsData);
 
             } catch (err) {
                 console.error('Admin data fetch error:', err);
@@ -81,6 +86,38 @@ export default function AdminDashboard() {
             }
         } catch (err) {
             alert('Error updating user role');
+        }
+    };
+
+    const handleVerifySeller = async (id, status) => {
+        setVerifyingSellerId(id);
+        try {
+            const res = await fetch(`http://localhost:5000/api/sellers/verify/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ status })
+            });
+
+            if (res.ok) {
+                setSellerRequests(sellerRequests.filter(r => r._id !== id));
+                alert(`Seller ${status} successfully!`);
+                // Reload users if approved, since role has changed
+                if (status === 'approved') {
+                    const usersRes = await fetch(`http://localhost:5000/api/admin/users`, { headers: { 'Authorization': `Bearer ${token}` } });
+                    const usersData = await usersRes.json();
+                    setUsers(usersData);
+                }
+            } else {
+                const data = await res.json();
+                alert(data.message || 'Verification failed');
+            }
+        } catch (err) {
+            alert('Error verifying seller');
+        } finally {
+            setVerifyingSellerId(null);
         }
     };
 
@@ -132,7 +169,7 @@ export default function AdminDashboard() {
                         { id: 'users', icon: Users, label: 'Manage Users' },
                         { id: 'products', icon: Package, label: 'Manage Products' },
                         { id: 'orders', icon: ShoppingCart, label: 'All Orders' },
-                        { id: 'sellers', icon: ShoppingBag, label: 'Seller List' }
+                        { id: 'requests', icon: ShieldCheck, label: 'Seller Requests' }
                     ].map((item) => (
                         <button
                             key={item.id}
@@ -239,14 +276,14 @@ export default function AdminDashboard() {
                                                 <td className="px-6 py-4 text-sm font-bold text-gray-900">{order.user?.username || 'Guest'}</td>
                                                 <td className="px-6 py-4 text-sm font-black text-brand-magenta">Rs. {order.totalPrice}</td>
                                                 <td className="px-6 py-4">
-                                                    {order.isPaid ? 
-                                                        <CheckCircle size={16} className="text-green-500" /> : 
+                                                    {order.isPaid ?
+                                                        <CheckCircle size={16} className="text-green-500" /> :
                                                         <XCircle size={16} className="text-red-400" />
                                                     }
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    {order.isDelivered ? 
-                                                        <span className="text-[10px] font-bold bg-green-100 text-green-700 px-2 py-1 rounded">YES</span> : 
+                                                    {order.isDelivered ?
+                                                        <span className="text-[10px] font-bold bg-green-100 text-green-700 px-2 py-1 rounded">YES</span> :
                                                         <span className="text-[10px] font-bold bg-gray-100 text-gray-600 px-2 py-1 rounded">NO</span>
                                                     }
                                                 </td>
@@ -320,7 +357,7 @@ export default function AdminDashboard() {
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-right">
-                                                <button 
+                                                <button
                                                     onClick={() => setRemovingProduct(p)}
                                                     className="p-2 hover:bg-red-50 text-red-400 hover:text-red-600 rounded-lg transition-colors"
                                                     title="Remove Product"
@@ -383,33 +420,60 @@ export default function AdminDashboard() {
                     </div>
                 )}
 
-                {activeTab === 'sellers' && (
+                {activeTab === 'requests' && (
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                         <div className="overflow-x-auto">
                             <table className="w-full text-left">
                                 <thead className="bg-gray-50 text-gray-400 text-[10px] font-bold uppercase tracking-widest">
                                     <tr>
-                                        <th className="px-6 py-4">Shop Name</th>
-                                        <th className="px-6 py-4">Owner</th>
-                                        <th className="px-6 py-4">Email</th>
+                                        <th className="px-6 py-4">Shop Details</th>
+                                        <th className="px-6 py-4">Applicant</th>
+                                        <th className="px-6 py-4">Business Info</th>
                                         <th className="px-6 py-4">Phone</th>
-                                        <th className="px-6 py-4">Action</th>
+                                        <th className="px-6 py-4 text-center">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
-                                    {users.filter(u => u.role === 'seller').map((u) => (
-                                        <tr key={u._id} className="hover:bg-gray-50 transition-colors text-sm">
-                                            <td className="px-6 py-4 font-bold text-gray-900">{u.shopName || 'N/A'}</td>
-                                            <td className="px-6 py-4 text-gray-600">{u.username}</td>
-                                            <td className="px-6 py-4 text-gray-600">{u.email}</td>
-                                            <td className="px-6 py-4 font-mono text-gray-400">{u.phone}</td>
+                                    {sellerRequests.map((req) => (
+                                        <tr key={req._id} className="hover:bg-gray-50 transition-colors text-sm">
                                             <td className="px-6 py-4">
-                                                <button className="text-[10px] font-black text-brand-magenta hover:underline uppercase tracking-wider">
-                                                    View Shop
+                                                <div className="font-bold text-gray-900">{req.shopName}</div>
+                                                <div className="text-[10px] text-gray-400 truncate max-w-[150px]">{req.shopLocation}</div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="font-bold text-gray-900">{req.user?.fullName}</div>
+                                                <div className="text-[10px] text-brand-magenta">{req.idDocumentType}</div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="text-xs font-bold text-gray-600">{req.businessType}</div>
+                                                <div className="text-[10px] font-mono text-gray-400">ID: {req.businessRegistrationNumber}</div>
+                                            </td>
+                                            <td className="px-6 py-4 font-mono text-gray-400 text-xs">{req.shopPhone}</td>
+                                            <td className="px-6 py-4 flex justify-center gap-2">
+                                                <button
+                                                    onClick={() => handleVerifySeller(req._id, 'approved')}
+                                                    disabled={verifyingSellerId === req._id}
+                                                    className="flex items-center gap-1 bg-green-500 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-tighter hover:bg-green-600 disabled:opacity-50"
+                                                >
+                                                    <CheckCircle size={14} />
+                                                    Approve
+                                                </button>
+                                                <button
+                                                    onClick={() => handleVerifySeller(req._id, 'rejected')}
+                                                    disabled={verifyingSellerId === req._id}
+                                                    className="flex items-center gap-1 bg-red-500 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-tighter hover:bg-red-600 disabled:opacity-50"
+                                                >
+                                                    <XCircle size={14} />
+                                                    Reject
                                                 </button>
                                             </td>
                                         </tr>
                                     ))}
+                                    {sellerRequests.length === 0 && (
+                                        <tr>
+                                            <td colSpan="5" className="px-6 py-10 text-center text-gray-400 font-medium">No pending seller requests</td>
+                                        </tr>
+                                    )}
                                 </tbody>
                             </table>
                         </div>
@@ -426,29 +490,29 @@ export default function AdminDashboard() {
                                 </div>
                                 <h3 className="text-2xl font-bold text-gray-900 mb-2">Remove Product?</h3>
                                 <p className="text-gray-500 text-sm mb-6">
-                                    You are about to remove <span className="font-bold text-gray-900">"{removingProduct.name}"</span>. 
+                                    You are about to remove <span className="font-bold text-gray-900">"{removingProduct.name}"</span>.
                                     Please provide a reason so we can notify the seller.
                                 </p>
-                                
+
                                 <div className="space-y-4">
                                     <div>
                                         <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Reason for Removal</label>
-                                        <textarea 
+                                        <textarea
                                             value={removalReason}
                                             onChange={(e) => setRemovalReason(e.target.value)}
                                             placeholder="e.g., Copyright violation, Inappropriate content, Counterfeit item..."
                                             className="w-full bg-gray-50 border-none rounded-2xl p-4 text-sm focus:ring-2 focus:ring-red-500 h-32 resize-none"
                                         />
                                     </div>
-                                    
+
                                     <div className="flex gap-3 pt-2">
-                                        <button 
+                                        <button
                                             onClick={() => setRemovingProduct(null)}
                                             className="flex-1 px-6 py-3 rounded-2xl font-bold text-gray-500 hover:bg-gray-100 transition-colors"
                                         >
                                             Cancel
                                         </button>
-                                        <button 
+                                        <button
                                             onClick={handleRemoveProduct}
                                             disabled={!removalReason.trim()}
                                             className="flex-1 bg-red-600 text-white px-6 py-3 rounded-2xl font-bold hover:bg-red-700 transition-all shadow-lg shadow-red-200 disabled:opacity-50 disabled:shadow-none flex items-center justify-center gap-2"
@@ -465,4 +529,5 @@ export default function AdminDashboard() {
             </main>
         </div>
     );
+
 }

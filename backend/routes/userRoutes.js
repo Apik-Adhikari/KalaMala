@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { registerUser, loginUser, getUserProfile, updateUserProfile, getUserById, toggleWishlist, uploadProfileImage, getNotifications, markNotificationAsRead } = require('../controllers/userController');
+const { registerUser, loginUser, getUserProfile, updateUserProfile, getUserById, toggleWishlist, uploadProfileImage, getNotifications, markNotificationAsRead, verifyEmail, verifyCode, googleAuth, forgotPassword, resetPassword, verifyResetToken } = require('../controllers/userController');
 const { authMiddleware } = require('../middleware/authMiddleware');
 const upload = require('../middleware/uploadImages');
 
@@ -13,6 +13,21 @@ router.post('/register', registerUser);
 // @desc    Login user
 // @access  Public
 router.post('/login', loginUser);
+
+// @route   POST /api/users/verify-email
+// @desc    Verify email address (legacy link)
+// @access  Public
+router.post('/verify-email', verifyEmail);
+
+// @route   POST /api/users/verify-code
+// @desc    Verify email with 6-digit code
+// @access  Public
+router.post('/verify-code', verifyCode);
+
+// @route   POST /api/users/google
+// @desc    Google auth
+// @access  Public
+router.post('/google', googleAuth);
 
 // @route   GET /api/users/profile
 // @desc    Get logged in user profile
@@ -49,6 +64,19 @@ router.get('/notifications', authMiddleware, getNotifications);
 // @access  Private
 router.put('/notifications/:id', authMiddleware, markNotificationAsRead);
 
+// @route   POST /api/users/forgot-password
+// @desc    Request password reset
+// @access  Public
+router.post('/forgot-password', forgotPassword);
 
+// @route   POST /api/users/reset-password
+// @desc    Reset password with token
+// @access  Public
+router.post('/reset-password', resetPassword);
+
+// @route   GET /api/users/verify-reset-token/:token
+// @desc    Verify reset token
+// @access  Public
+router.get('/verify-reset-token/:token', verifyResetToken);
 
 module.exports = router;
